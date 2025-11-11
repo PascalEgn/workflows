@@ -12587,6 +12587,21 @@ def test_multiple_author_groups(shared_datadir, parser):
     assert parsed_multiple_author_groups_articles.get("authors") == expected_authors
 
 
+def test_weird_author_groups(shared_datadir, parser):
+    with open(shared_datadir / "weird_authors.xml", "rb") as file:
+        xml_content_bytes = BytesIO(file.read())
+        article = parse_without_names_spaces(xml_content_bytes)
+
+    parsed_author_groups_articles = parser._publisher_specific_parsing(article)
+
+    parsed_authors = parsed_author_groups_articles.get("authors")
+
+    assert any(
+        (p["surname"] == "Agheorghiesei" and len(p["affiliations"]) == 1)
+        for p in parsed_authors
+    ), "Expected surname 'blabla' not found in list"
+
+
 def test_wrong_namespaces(shared_datadir, parser):
     with open(shared_datadir / "wrong_namespaces.xml", "rb") as file:
         xml_content_bytes = BytesIO(file.read())
