@@ -116,7 +116,6 @@ def test_arxiv_eprints_value_with_version(shared_datadir, parser):
     assert parsed_article["arxiv_eprints"] == [{"value": "2108.04010"}]
 
 
-@fixture
 @mark.parametrize(
     "input, expected",
     [
@@ -133,7 +132,7 @@ def test_arxiv_eprints_value_with_version(shared_datadir, parser):
         ),
     ],
 )
-def test_arxiv_extraction_pattern(expected, input):
+def test_arxiv_extraction_pattern(input, expected):
     assert ARXIV_EXTRACTION_PATTERN.sub("", input) == expected
 
 
