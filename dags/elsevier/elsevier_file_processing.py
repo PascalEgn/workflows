@@ -1,5 +1,7 @@
+import logging
+
 import pendulum
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from common.enhancer import Enhancer
 from common.enricher import Enricher
 from common.exceptions import EmptyOutputFromPreviousTask
@@ -11,11 +13,9 @@ from common.utils import (
 )
 from elsevier.parser import ElsevierParser
 from elsevier.repository import ElsevierRepository
-from executor_config import kubernetes_executor_config
 from inspire_utils.record import get_value
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def parse_elsevier(**kwargs):
@@ -26,8 +26,8 @@ def parse_elsevier(**kwargs):
     parsed = parser.parse(xml)
     try:
         metadata = kwargs["params"]["metadata"]
-    except KeyError:
-        raise Exception("Record is missing metadata. Exiting run.")
+    except KeyError as e:
+        raise Exception("Record is missing metadata. Exiting run.") from e
     return {**parsed, **metadata}
 
 
@@ -39,31 +39,34 @@ def enrich_elsevier(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    start_date=pendulum.today("UTC").add(days=-1),
+    tags=["process", "elsevier"],
+)
 def elsevier_process_file():
-
     s3_client = ElsevierRepository()
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def parse(**kwargs):
         xml_path = kwargs["params"]["file_name"]
         xml_content_bytes = s3_client.get_by_id(xml_path)
         kwargs["params"]["file_content"] = xml_content_bytes
         return parse_elsevier(**kwargs)
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def enhance(parsed_file):
         if parsed_file:
             return parsed_file and enhance_elsevier(parsed_file)
         raise EmptyOutputFromPreviousTask("parse_metadata")
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def populate_files(parsed_file):
         if "files" not in parsed_file:
             logger.info("No files to populate")
             return parsed_file
 
-        logger.info("Populating files", files=parsed_file["files"])
+        logger.info("Populating files. Files: %s", parsed_file["files"])
 
         s3_client_bucket = s3_client.bucket
         s3_scoap3_client = Scoap3Repository()
@@ -72,20 +75,20 @@ def elsevier_process_file():
             s3_client_bucket, parsed_file["files"], prefix=doi
         )
         parsed_file["files"] = files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated. Files: %s", parsed_file["files"])
         return parsed_file
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def enrich(enhanced_file):
         if enhanced_file:
             return enrich_elsevier(enhanced_file)
         raise EmptyOutputFromPreviousTask("enhanced_file_with_metadata")
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def save_to_s3(enriched_file):
         upload_json_to_s3(json_record=enriched_file, repo=s3_client)
 
-    @task(executor_config=kubernetes_executor_config)
+    @task()
     def create_or_update(enriched_file):
         create_or_update_article(enriched_file)
 

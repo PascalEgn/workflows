@@ -6,9 +6,9 @@ from aps.aps_api_client import APSApiClient
 from aps.aps_params import APSParams
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def aps_api_client_fixture():
-    yield APSApiClient()
+    return APSApiClient()
 
 
 # @pytest.mark.vcr

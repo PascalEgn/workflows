@@ -1,5 +1,4 @@
-from datetime import datetime, timezone
-from unittest import mock
+from datetime import UTC, datetime
 
 import pytest
 from airflow.models import DagBag
@@ -14,7 +13,7 @@ def dagbag():
 class TestUnitJagiellonianPullApi:
     def setup_method(self):
         self.dag_id = "jagiellonian_pull_api"
-        self.execution_date = datetime.now(timezone.utc)
+        self.execution_date = datetime.now(UTC)
 
         self.dag = DagBag(dag_folder="dags/", include_examples=False).get_dag(
             self.dag_id
@@ -474,17 +473,24 @@ class TestUnitJagiellonianPullApi:
 
         assert result == expected
 
-    @mock.patch("airflow.api.common.trigger_dag.trigger_dag")
-    def test_trigger_file_processing(self, mock_trigger_dag):
-
+    def test_prepare_trigger_conf(self):
         sample_data = [
             {"DOI": "10.5506/aphyspolb.56.3-a17", "title": ["Article 1"]},
             {"DOI": "10.5506/aphyspolb.56.3-a18", "title": ["Article 2"]},
         ]
 
-        task = self.dag.get_task("jagiellonian_trigger_file_processing")
+        task = self.dag.get_task("prepare_trigger_conf")
         function_to_unit_test = task.python_callable
 
-        function_to_unit_test(sample_data)
+        result = function_to_unit_test(sample_data)
 
-        assert mock_trigger_dag.call_count == 2
+        expected = [
+            {"article": {"DOI": "10.5506/aphyspolb.56.3-a17", "title": ["Article 1"]}},
+            {"article": {"DOI": "10.5506/aphyspolb.56.3-a18", "title": ["Article 2"]}},
+        ]
+        assert result == expected
+
+    def test_dag_structure(self):
+        assert "jagiellonian_trigger_file_processing" in self.dag.task_ids
+        task = self.dag.get_task("jagiellonian_trigger_file_processing")
+        assert "MappedOperator" in str(type(task)) or task.is_mapped

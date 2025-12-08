@@ -1,10 +1,12 @@
+import logging
 import xml.etree.ElementTree as ET
 
 from common.constants import WHITE_SPACES
 from common.exceptions import RequiredFieldNotFoundExtractionError
 from common.parsing.extractor import IExtractor
 from common.utils import check_value, parse_element_text
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class TextExtractor(IExtractor):
@@ -29,13 +31,12 @@ class TextExtractor(IExtractor):
         self.extra_function = extra_function
         self.all_content_between_tags = all_content_between_tags
         self.remove_tags = remove_tags
-        self.logger = get_logger().bind(class_name=type(self).__name__)
 
     def _get_text_value(self, raw_value):
         try:
             return raw_value.text
         except AttributeError:
-            self.logger.error(f"{self.destination} is not found in XML")
+            logger.error("%s is not found in XML", self.destination)
             return
 
     def _get_content_as_text_value(self, node):
@@ -53,7 +54,7 @@ class TextExtractor(IExtractor):
 
             return WHITE_SPACES.sub(" ", extracted_value).strip()
         except AttributeError:
-            self.logger.error(f"{self.destination} is not found in XML")
+            logger.error("%s is not found in XML", self.destination)
             return
 
     def _process_text_with_extra_function(self, text):
@@ -61,7 +62,7 @@ class TextExtractor(IExtractor):
             try:
                 return self.extra_function(text.replace('"', "'"))
             except Exception:
-                self.logger.error("Error in extra function with value", text=text)
+                logger.error("Error in extra function with value. Value: %s", text)
 
     def extract(self, article):
         if self.prefixes:
@@ -107,7 +108,6 @@ class AttributeExtractor(IExtractor):
         self.extra_function = extra_function
         self.default_value = default_value
         self.required = required
-        self.logger = get_logger().bind(class_name=type(self).__name__)
 
     def _get_attribute_value(self, raw_value):
         try:
@@ -120,9 +120,7 @@ class AttributeExtractor(IExtractor):
             try:
                 return self.extra_function(attribute)
             except Exception:
-                self.logger.error(
-                    "Error in extra function with value", attribute=attribute
-                )
+                logger.error("Error in extra function with value. Value: %s", attribute)
 
     def extract(self, article):
         node = article.find(self.source)

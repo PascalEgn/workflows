@@ -1,3 +1,4 @@
+import logging
 import re
 import xml.etree.ElementTree as ET
 
@@ -5,6 +6,8 @@ from common.parsing.xml_extractors import (
     RequiredFieldNotFoundExtractionError,
     TextExtractor,
 )
+
+logger = logging.getLogger("airflow.task")
 
 
 class HindawiTextExtractor(TextExtractor):
@@ -23,7 +26,9 @@ class HindawiTextExtractor(TextExtractor):
             [node.text or ""] + [ET.tostring(el).decode("ascii") for el in node]
         )
         final_value = self.extra_function(pattern.sub("", extracted_value))
-        self.logger.info("Extracted value", field=self.destination, value=final_value)
+        logger.info(
+            "Extracted value. Field: %s. Value: %s", self.destination, final_value
+        )
         return final_value
 
     def extract(self, article):

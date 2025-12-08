@@ -1,3 +1,4 @@
+import logging
 import os
 
 from common.constants import (
@@ -22,7 +23,8 @@ from common.utils import (
 )
 from idutils import is_arxiv
 from inspire_utils.date import PartialDate
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class IOPParser(IParser):
@@ -41,7 +43,6 @@ class IOPParser(IParser):
         self.year = None
         self.journal_doctype = None
         self.collaborations = []
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         extractors = [
             CustomExtractor(
                 destination="dois",
@@ -146,7 +147,7 @@ class IOPParser(IParser):
             return
         dois = node.text
         if dois:
-            self.logger.msg("Parsing dois for article", dois=dois)
+            logger.info("Parsing dois for article. DOIs: %s", dois)
             self.dois = dois
             return [dois]
         return
@@ -155,17 +156,15 @@ class IOPParser(IParser):
         node = article.find(".")
         value = node.get("article-type")
         if not value:
-            self.logger.error("Article-type is not found in XML", dois=self.dois)
+            logger.error("Article-type is not found in XML. DOIs: %s", self.dois)
             return None
         try:
             self.journal_doctype = self.article_type_mapping[value]
             return self.journal_doctype
         except KeyError:
-            self.logger.error(
-                "Unmapped article type", dois=self.dois, article_type=value
-            )
-        except Exception:
-            self.logger.error("Unknown error", dois=self.dois)
+            logger.error("Unmapped article type %s for dois: %s", value, self.dois)
+        except Exception as e:
+            logger.error("Unknown error for dois: %s. Error: %s", self.dois, e)
 
     def _get_related_article_doi(self, article):
         if self.journal_doctype not in ["corrigendum", "addendum"]:
@@ -174,10 +173,10 @@ class IOPParser(IParser):
         try:
             related_article_doi = node.get("href")
             if related_article_doi:
-                self.logger.info("Adding related_article_doi.")
+                logger.info("Adding related_article_doi.")
                 return [related_article_doi]
         except AttributeError:
-            self.logger.error("No related article dois found", dois=self.dois)
+            logger.error("No related article dois found for dois: %s", self.dois)
             return
 
     def _get_extracted_arxiv_eprint_value(self, article):
@@ -188,9 +187,9 @@ class IOPParser(IParser):
             arxiv_value = ARXIV_EXTRACTION_PATTERN.sub("", arxivs_value.text.lower())
             if is_arxiv(arxiv_value):
                 return [{"value": arxiv_value}]
-            self.logger.error("The arXiv value is not valid.", dois=self.dois)
+            logger.error("The arXiv value is not valid. DOIs: %s", self.dois)
         except AttributeError:
-            self.logger.error("No arXiv eprints found", dois=self.dois)
+            logger.error("No arXiv eprints found for dois: %s", self.dois)
 
     def _get_date_element(self, article):
         date = (
@@ -210,7 +209,7 @@ class IOPParser(IParser):
             year = int(date.find("year").text)
             self.year = year
         except NODE_ATTRIBUTE_NOT_FOUND_ERRORS:
-            self.logger.error("Cannot find year of date_published in XML")
+            logger.error("Cannot find year of date_published in XML")
         try:
             month = int(date.find("month").text)
         # was discussed with Anne: if the day is not present, we return year and month
@@ -218,12 +217,12 @@ class IOPParser(IParser):
         # if the year is not present - the parsing should crash, because according schema
         # the publication_year is required, which is take from date_published
         except NODE_ATTRIBUTE_NOT_FOUND_ERRORS:
-            self.logger.error("Cannot find month of date_published in XML")
+            logger.error("Cannot find month of date_published in XML")
             month = None
         try:
             day = int(date.find("day").text)
         except NODE_ATTRIBUTE_NOT_FOUND_ERRORS:
-            self.logger.error("Cannot find day of date_published in XML")
+            logger.error("Cannot find day of date_published in XML")
             day = None
         try:
             date = PartialDate(year=self.year, month=month, day=day)
@@ -291,7 +290,7 @@ class IOPParser(IParser):
             else:
                 self.collaborations.append(REMOVE_SPECIAL_CHARS.sub("", given_names))
         except AttributeError:
-            self.logger.error("Given_names is not found in XML", dois=self.dois)
+            logger.error("Given_names is not found in XML for dois: %s", self.dois)
 
     def _get_affiliation_value(self, article, reffered_id):
         try:
@@ -308,7 +307,7 @@ class IOPParser(IParser):
                     institution_and_country["value"] = ", ".join([institution, country])
             return institution_and_country
         except AttributeError:
-            self.logger.error("Referred id is not found")
+            logger.error("Referred id is not found")
 
     def _get_institution(self, article, id):
         return extract_text(
@@ -411,14 +410,14 @@ class IOPParser(IParser):
                 if type_and_version:
                     licenses.append(type_and_version)
             except KeyError:
-                self.logger.error("License is not found in XML.")
+                logger.error("License is not found in XML.")
         return licenses
 
     def _get_local_files(self, article):
         if not self.file_path:
-            self.logger.error("No file path provided")
+            logger.error("No file path provided")
             return
-        self.logger.msg("Parsing local files", file=self.file_path)
+        logger.info("Parsing local files %s", self.file_path)
 
         dir_path = os.path.dirname(self.file_path)
         file_name = os.path.basename(self.file_path).split(".")[0]
@@ -428,5 +427,5 @@ class IOPParser(IParser):
             "xml": self.file_path,
             "pdf": pdf_path,
         }
-        self.logger.msg("Local files parsed", files=files)
+        logger.info("Local files parsed %s", files)
         return files

@@ -1,15 +1,15 @@
+import pytest
 from common.pull_ftp import migrate_files
 from elsevier.repository import ElsevierRepository
 from elsevier.sftp_service import ElsevierSFTPService
-from pytest import fixture
 from structlog import get_logger
 
 
-@fixture
+@pytest.fixture
 def elsevier_empty_repo(shared_datadir):
     repo = ElsevierRepository()
     repo.delete_all()
-    yield repo
+    return repo
 
 
 def test_migrate_files(elsevier_empty_repo):

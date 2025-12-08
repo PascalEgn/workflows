@@ -1,30 +1,30 @@
+import pytest
 from airflow.models import DagBag
 from common.pull_ftp import migrate_from_ftp
 from elsevier.repository import ElsevierRepository
 from elsevier.sftp_service import ElsevierSFTPService
-from pytest import fixture
 from structlog import get_logger
 
 DAG_NAME = "elsevier_pull_sftp"
 
 
-@fixture
+@pytest.fixture
 def dag():
     dagbag = DagBag(dag_folder="dags/", include_examples=False)
     assert dagbag.import_errors.get(f"dags/{DAG_NAME}.py") is None
     return dagbag.get_dag(dag_id=DAG_NAME)
 
 
-@fixture
+@pytest.fixture
 def elsevier_empty_repo():
     repo = ElsevierRepository()
     repo.delete_all()
-    yield repo
+    return repo
 
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 3
 
 
 def test_dag_migrate_from_FTP(elsevier_empty_repo):

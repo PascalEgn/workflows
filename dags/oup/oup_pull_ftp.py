@@ -1,14 +1,22 @@
+import logging
+
 import common.pull_ftp as pull_ftp
 import pendulum
-from airflow.decorators import dag, task
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.sdk import dag, task
 from oup.ftp_service import OUPSFTPService
 from oup.repository import OUPRepository
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
+
+OUP_REPO = OUPRepository()
+OUP_SFTP = OUPSFTPService()
 
 
 @dag(
     start_date=pendulum.today("UTC").add(days=-1),
-    schedule="30 */3 * * *",
+    schedule="45 */6 * * *",
+    tags=["pull", "oup"],
     params={
         "excluded_directories": [],
         "force_pull": False,
@@ -16,10 +24,8 @@ from structlog import get_logger
     },
 )
 def oup_pull_ftp():
-    logger = get_logger().bind(class_name="oup_pull_ftp")
-
     @task()
-    def migrate_from_ftp(ftp=OUPSFTPService(), repo=OUPRepository(), **kwargs):
+    def migrate_from_ftp(ftp=OUP_SFTP, repo=OUP_REPO, **kwargs):
         params = kwargs["params"]
         specific_files = (
             "filenames_pull" in params
@@ -27,15 +33,14 @@ def oup_pull_ftp():
             and not params["filenames_pull"]["force_from_ftp"]
         )
         if specific_files:
-            specific_files_names = pull_ftp.reprocess_files(repo, logger, **kwargs)
-            return specific_files_names
+            return pull_ftp.reprocess_files(repo, logger, **kwargs)
 
         with ftp:
             return pull_ftp.migrate_from_ftp(ftp, repo, logger, **kwargs)
 
     @task()
-    def trigger_file_processing(
-        repo=OUPRepository(),
+    def prepare_trigger_conf(
+        repo=OUP_REPO,
         filenames=None,
     ):
         return pull_ftp.trigger_file_processing(
@@ -43,7 +48,13 @@ def oup_pull_ftp():
         )
 
     filenames = migrate_from_ftp()
-    trigger_file_processing(filenames=filenames)
+    trigger_confs = prepare_trigger_conf(filenames=filenames)
+
+    TriggerDagRunOperator.partial(
+        task_id="oup_trigger_file_processing",
+        trigger_dag_id="oup_process_file",
+        reset_dag_run=True,
+    ).expand(conf=trigger_confs)
 
 
-dag_taskflow = oup_pull_ftp()
+oup_pull_ftp()

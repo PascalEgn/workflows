@@ -218,9 +218,11 @@ def test_create_or_update_article_with_error():
 
 
 def test_remove_xml_namespaces(shared_datadir):
-    with open(shared_datadir / "xml_with_namespaces.xml") as file1:
-        with open(shared_datadir / "expected_xml_without_namespaces") as file2:
-            assert remove_xml_namespaces(file1.read()) == file2.read()
+    with (
+        open(shared_datadir / "xml_with_namespaces.xml") as file1,
+        open(shared_datadir / "expected_xml_without_namespaces") as file2,
+    ):
+        assert remove_xml_namespaces(file1.read()) == file2.read()
 
 
 def test_parse_without_names_spaces_wrong_namespaces(shared_datadir, monkeypatch):

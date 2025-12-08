@@ -15,7 +15,7 @@ FIND_ALL_EXPECTED_VALUES = ["file1.json", "file2.json"]
 expected_file = BytesIO()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def boto3_fixture():
     with patch("common.s3_service.boto3", autospec=True) as boto3_mock:
         boto3_mock.resource.return_value.Bucket.return_value.objects.all.return_value = [

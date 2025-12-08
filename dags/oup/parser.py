@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import re
 
@@ -14,13 +15,13 @@ from common.utils import (
     get_license_type_and_version_from_url,
     get_text_value,
 )
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class OUPParser(IParser):
     def __init__(self, file_path=None):
         self.file_path = file_path
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self.article_type_mapping = {
             "research-article": "article",
             "corrected-article": "article",
@@ -126,12 +127,12 @@ class OUPParser(IParser):
         doi = get_text_value(doi_element)
         if not doi:
             return []
-        self.logger.msg("Parsing dois for article", dois=doi)
+        logger.info("Parsing dois for article: %s", doi)
         self.dois = doi
         return [doi]
 
     def _get_journal_doctype(self, article):
-        self.logger.msg("Parsing journal doctype for article", dois=self.dois)
+        logger.info("Parsing journal doctype for article: %s", self.dois)
         journal_doctype_raw = article.find("front/..").get("article-type")
         if not journal_doctype_raw:
             return
@@ -140,9 +141,8 @@ class OUPParser(IParser):
         except KeyError:
             journal_doctype = "other"
         if "other" in journal_doctype:
-            self.logger.warning(
-                "There are unmapped article types for article",
-                journal_doctype=journal_doctype,
+            logger.warning(
+                "There are unmapped article types for article: %s", journal_doctype
             )
         return journal_doctype
 
@@ -283,14 +283,14 @@ class OUPParser(IParser):
                 if type_and_version:
                     licenses.append(type_and_version)
             except (KeyError, TypeError):
-                self.logger.error("License is not found in XML.", dois=self.dois)
+                logger.error("License is not found in XML. DOIs: %s", self.dois)
         return licenses
 
     def _get_local_files(self, article):
         if not self.file_path:
-            self.logger.error("No file path provided")
+            logger.error("No file path provided")
             return
-        self.logger.msg("Parsing local files", file=self.file_path)
+        logger.info("Parsing local files: %s", self.file_path)
 
         dir_path = os.path.dirname(self.file_path)
         file_name = os.path.basename(self.file_path).split(".")[0]
@@ -304,5 +304,5 @@ class OUPParser(IParser):
             "pdf": pdf_path,
             "pdfa": pdfa_path,
         }
-        self.logger.msg("Local files parsed", files=files)
+        logger.info("Local files parsed: %s", files)
         return files

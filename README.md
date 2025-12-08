@@ -4,65 +4,26 @@ The following image describes the process for each publishers. Please note that 
 
 ![DAG Architecture](./documentation/airflow_workflows.png)
 
-## Run with docker-compose
+## Run with docker compose
 
 The easiest way to run the project is run in with docker compose.
-For it docker-compose has to be installed.After just run in it the command bellow:
+For it docker compose has to be installed. After just run in it the command bellow:
 
 ```
-docker-compose up --build
+docker compose up --build
 ```
-
-Currently the docker-compose performance isn't very good. Thus, for local dev, it is advised to run it locally.
-
-## Run it locally
-
-We need to install airflow.
-
-1. First, we need to install poetry:
-
-   ```
-   curl -sSL https://install.python-poetry.org | python3 -
-
-   ```
-
-2. Install pyenv, the instruction can be found [here](https://github.com/pyenv/pyenv#installation)
-3. Export correct python version by using pyenv:
-   ```
-   export PYTHON_VERSION = 3.10.11
-   pyenv install ${PYTHON_VERSION}
-   pyenv global $(PYTHON_VERSION)
-   ```
-4. Set airflow home directory:
-
-   ```
-   export AIRFLOW_HOME=${PWD}
-   ```
-
-5. Install dependencies listed in pyproject.toml file by running the command:
-   ```
-   poetry install
-   ```
-6. Run Airflow. Airflow comes with the `standalone` command. This should not be used as it seems to use the SequentialExecutor by default. To have our local config being use, we must run all services together :
-
-   ```
-       poetry run airflow webserver
-       poetry run airflow triggerer
-       poetry run airflow scheduler
-   ```
 
 ### Script
 
-A Makefile has been created to ease this process. The available targets are the following :
+A Makefile has been created to ease this process. The available targets are the following:
 
-- `make init` : Inits the pyenv version and virtual env.
 - `make start` : Starts all processes needed.
 - `make stop` : Stops all processes needed.
-- `make create_user` : create a new user with all the parameters
+- `make test` : Run tests.
 
 ## Access UI
 
-Airflow UI will be rinning on localhost:8080.
+Airflow UI will be running on localhost:8080.
 More details about Airflow installation and running can be found [here](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html)
 
 ## Environment Variables

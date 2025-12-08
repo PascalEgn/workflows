@@ -1,32 +1,32 @@
+import pytest
 from common.utils import parse_without_names_spaces
 from elsevier.metadata_parser import ElsevierMetadataParser
 from freezegun import freeze_time
-from pytest import fixture, mark, param
 
 
-@fixture(scope="module")
+@pytest.fixture(scope="module")
 def parser():
     return ElsevierMetadataParser(
         file_path="extracted/CERNQ000000010669A/CERNQ000000010669",
     )
 
 
-@fixture
+@pytest.fixture
 def article(shared_datadir):
     with open(shared_datadir / "CERNQ000000010011" / "dataset.xml") as file:
         return parse_without_names_spaces(file.read())
 
 
-@fixture
+@pytest.fixture
 @freeze_time("2023-11-02")
 def parsed_articles(parser, article):
     return [article for article in parser.parse(article)]
 
 
-@mark.parametrize(
-    "expected, key",
+@pytest.mark.parametrize(
+    ("expected", "key"),
     [
-        param(
+        pytest.param(
             [
                 [{"value": "10.1016/j.nuclphysb.2023.116106"}],
                 [{"value": "10.1016/j.nuclphysb.2023.116107"}],
@@ -36,7 +36,7 @@ def parsed_articles(parser, article):
             "dois",
             id="test_get_dois",
         ),
-        param(
+        pytest.param(
             [
                 [
                     {
@@ -74,12 +74,12 @@ def parsed_articles(parser, article):
             "publication_info",
             id="test_publication_info",
         ),
-        param(
+        pytest.param(
             ["", "", "2023-02-04", ""],
             "date_published",
             id="test_published_date",
         ),
-        param(
+        pytest.param(
             [
                 [{"primary": "NUPHB"}],
                 [{"primary": "NUPHB"}],
@@ -89,7 +89,7 @@ def parsed_articles(parser, article):
             "collections",
             id="test_collections",
         ),
-        param(
+        pytest.param(
             [
                 [
                     {
@@ -119,7 +119,7 @@ def parsed_articles(parser, article):
             "license",
             id="test_license",
         ),
-        param(
+        pytest.param(
             [
                 {
                     "pdf": "extracted/CERNQ000000010669A/S0550321323000354/main.pdf",
@@ -149,26 +149,28 @@ def parsed_articles(parser, article):
 )
 @freeze_time("2023-11-02")
 def test_elsevier_dataset_parsing(parsed_articles, expected, key):
-    for (parsed_article, expected_article) in zip(parsed_articles, expected):
+    for parsed_article, expected_article in zip(
+        parsed_articles, expected, strict=False
+    ):
         assert expected_article == parsed_article.get(key, "")
 
 
-@fixture
+@pytest.fixture
 def articles_with_volume(shared_datadir):
     with open(shared_datadir / "dataset_bfrqq.xml") as file:
         return parse_without_names_spaces(file.read())
 
 
-@fixture
+@pytest.fixture
 @freeze_time("2023-11-02")
 def parsed_articles_with_volume(parser, articles_with_volume):
     return [article for article in parser.parse(articles_with_volume)]
 
 
-@mark.parametrize(
-    "expected, key",
+@pytest.mark.parametrize(
+    ("expected", "key"),
     [
-        param(
+        pytest.param(
             [
                 [
                     {
@@ -188,7 +190,7 @@ def parsed_articles_with_volume(parser, articles_with_volume):
 def test_elsevier_dataset_parsing_with_volume(
     parsed_articles_with_volume, expected, key
 ):
-    for (parsed_article, expected_article) in zip(
-        parsed_articles_with_volume, expected
+    for parsed_article, expected_article in zip(
+        parsed_articles_with_volume, expected, strict=False
     ):
         assert expected_article == parsed_article[key]

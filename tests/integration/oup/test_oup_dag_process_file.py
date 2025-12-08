@@ -6,24 +6,23 @@ from common.utils import parse_without_names_spaces
 from freezegun import freeze_time
 from oup.oup_process_file import oup_enhance_file, oup_enrich_file
 from oup.parser import OUPParser
-from pytest import fixture
 
 DAG_NAME = "oup_process_file"
 
 
-@fixture
+@pytest.fixture
 def dag():
     dagbag = DagBag(dag_folder="dags/", include_examples=False)
     assert dagbag.import_errors.get(f"dags/{DAG_NAME}.py") is None
     return dagbag.get_dag(dag_id=DAG_NAME)
 
 
-@fixture
+@pytest.fixture
 def parser():
     return OUPParser()
 
 
-@fixture
+@pytest.fixture
 def articles(parser):
     data_dir = "./data/oup/"
     test_file = "2022-09-22_00:30:02_ptep_iss_2022_9.xml.zip"
@@ -44,7 +43,7 @@ def articles(parser):
     return articles
 
 
-@fixture
+@pytest.fixture
 def article(parser):
     data_dir = "./data/oup/"
     test_file = "2022-09-22_00:30:02_ptep_iss_2022_9.xml.zip"
@@ -82,7 +81,7 @@ def test_affiliation_countries_in_enriched(parser, articles):
 
 def test_dag_loaded(dag):
     assert dag
-    assert len(dag.tasks) == 6
+    assert len(dag.tasks) == 7
 
 
 publisher = "OUP"
@@ -146,7 +145,7 @@ expected_output_from_empty_input = {
 
 
 @pytest.mark.parametrize(
-    "test_input, expected, publisher",
+    ("test_input", "expected", "publisher"),
     [
         pytest.param(generic_pseudo_parser_output, expected_output, publisher),
         pytest.param(

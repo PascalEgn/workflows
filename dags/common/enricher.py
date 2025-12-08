@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import xml.etree.ElementTree as ET
@@ -6,13 +7,11 @@ import backoff
 import requests
 from common.cleanup import remove_unnecessary_fields
 from common.parsing.generic_parsing import remove_empty_values
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
-class Enricher(object):
-    def __init__(self):
-        self.logger = get_logger().bind(class_name=type(self).__name__)
-
+class Enricher:
     def _get_schema(self):
         return os.getenv("REPO_URL", "http://repo.qa.scoap3.org/schemas/hep.json")
 
@@ -44,9 +43,9 @@ class Enricher(object):
         if not primary_categories:
             return []
         if len(primary_categories) > 1:
-            self.logger.error(
-                "Arxiv returned multiple primary categories.",
-                categories=primary_categories,
+            logger.error(
+                "Arxiv returned multiple primary categories: %s",
+                primary_categories,
             )
             return []
         primary_category = primary_categories[0]
@@ -55,7 +54,7 @@ class Enricher(object):
             node.attrib["term"]
             for node in entry.findall("./w3:category", namespaces=xml_namespaces)
         ]
-        for (index, secondary_category) in enumerate(secondary_categories):
+        for index, secondary_category in enumerate(secondary_categories):
             if secondary_category == primary_category:
                 secondary_categories.pop(index)
 
@@ -84,19 +83,19 @@ class Enricher(object):
             xml = ET.fromstring(response.content)
             categories = self._get_arxiv_categories_from_response_xml(xml)
             if not categories:
-                self.logger.warning(
-                    "Could not get arxiv categories.",
-                    id=arxiv_id,
-                    title=title,
-                    doi=doi,
+                logger.warning(
+                    "Could not get arxiv categories for arxiv_id: %s, title: %s, doi: %s",
+                    arxiv_id,
+                    title,
+                    doi,
                 )
         else:
-            self.logger.error(
-                "Got arxiv response error.",
-                status_code=response.status_code,
-                id=arxiv_id,
-                title=title,
-                doi=doi,
+            logger.error(
+                "Got arxiv response error %s for arxiv_id: %s, title: %s, doi: %s",
+                response.status_code,
+                arxiv_id,
+                title,
+                doi,
             )
             response.raise_for_status()
         return categories
@@ -120,5 +119,5 @@ class Enricher(object):
         enriched_article = remove_empty_values(enriched_article)
         enriched_article = remove_unnecessary_fields(enriched_article)
 
-        self.logger.info("Enriched article.", article=enriched_article)
+        logger.info("Enriched article: %s", enriched_article)
         return enriched_article

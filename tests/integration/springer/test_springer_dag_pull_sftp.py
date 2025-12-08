@@ -17,14 +17,13 @@ def dag():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 4
 
 
 def test_dag_run(dag):
     repo = SpringerRepository()
     repo.delete_all()
     assert len(repo.find_all()) == 0
-    dag.clear()
     dag.test()
     expected_files = [
         {

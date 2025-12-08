@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import re
 
@@ -10,13 +11,13 @@ from common.parsing.xml_extractors import (
     TextExtractor,
 )
 from common.utils import clean_text, construct_license
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class SpringerParser(IParser):
     def __init__(self, file_path=None):
         self.file_path = file_path
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self.dois = None
         article_type_mapping = {
             "OriginalPaper": "article",
@@ -126,7 +127,7 @@ class SpringerParser(IParser):
         if doi_element is None:
             return []
         dois = doi_element.text
-        self.logger.msg("Parsing dois for article", dois=dois)
+        logger.info("Parsing dois for article. DOIs: %s", dois)
         self.dois = dois
         return [dois]
 
@@ -211,7 +212,7 @@ class SpringerParser(IParser):
         referred_id = contrib.get("AffiliationIDS")
 
         if not referred_id:
-            self.logger.msg("No referred id linked to this article.")
+            logger.info("No referred id linked to this article.")
             return affiliations
 
         for ref in referred_id.split():
@@ -280,7 +281,7 @@ class SpringerParser(IParser):
         if first_page_node is not None and last_page_node is not None:
             return [int(last_page_node.text) - int(first_page_node.text) + 1]
 
-        self.logger.warning("No first/last page found. Returning empty page_nrs.")
+        logger.warning("No first/last page found. Returning empty page_nrs.")
         return []
 
     def _get_license(self, article):
@@ -298,15 +299,15 @@ class SpringerParser(IParser):
             version = version_node.get("Version")
             try:
                 url = f"{base_url}/{license_type_parts[1].lower()}/{version}"
-            except IndexError:
-                raise UnknownLicense(" ".join(license_type_parts))
+            except IndexError as e:
+                raise UnknownLicense(" ".join(license_type_parts)) from e
             return [
                 construct_license(
                     url=url, license_type=license_type.upper(), version=version
                 )
             ]
 
-        self.logger.warning("License not found, returning default license.")
+        logger.warning("License not found, returning default license.")
         return [
             {
                 "license": "CC-BY-3.0",
@@ -316,9 +317,9 @@ class SpringerParser(IParser):
 
     def _get_local_files(self, article):
         if not self.file_path:
-            self.logger.error("No file path provided")
+            logger.error("No file path provided")
             return
-        self.logger.msg("Parsing local files", pdf=self.file_path)
+        logger.info("Parsing local files: %s", self.file_path)
 
         pdfa_name = f"{os.path.basename(self.file_path).split('.')[0]}.pdf"
         pdfa_path = os.path.join(

@@ -24,7 +24,7 @@
 # The following variables are supported:
 #
 # AIRFLOW_IMAGE_NAME           - Docker image name used to run Airflow.
-#                                Default: apache/airflow:2.6.0
+#                                Default: apache/airflow:3.1.3
 # AIRFLOW_UID                  - User ID in Airflow containers
 #                                Default: 50000
 # AIRFLOW_PROJ_DIR             - Base path to which all the files will be volumed.
@@ -42,76 +42,39 @@
 #                                as described in https://airflow.apache.org/docs/docker-stack/build.html.
 #                                Default: ''
 #
-# Feel free to modify this file to suit your needs.
 ---
-version: "3.8"
 x-airflow-common: &airflow-common
-  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
-  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
-  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.6.0}
-  build: .
+  build:
+    target: ${BUILD_TARGET:-base}
+    dockerfile: base-images/airflow/Dockerfile
+  pull_policy: never
   environment: &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW_UID: 50000
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    # For backward compatibility, with Airflow <2.3
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ""
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth"
+    AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     IOP_FTP_HOST: "sftp"
+    IOP_FTP_DIR: "/upload/iop"
     SPRINGER_FTP_HOST: "sftp"
     OUP_FTP_HOST: "sftp"
+    ELSEVIER_SFTP_HOST: "sftp"
     S3_ENDPOINT: "http://s3:9000"
+    COMMON_SFTP_HOST: "sftp"
+    COMMON_SFTP_PORT: 22
     SPRINGER_FTP_PORT: 22
+    OUP_FTP_PORT: 22
     IOP_FTP_PORT: 22
-    IOP_FTP_SSH_PRIVATE_KEY: |
-      -----BEGIN OPENSSH PRIVATE KEY-----
-      b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABFwAAAAdzc2gtcn
-      NhAAAAAwEAAQAAAQEAnrBypqFMTUU3a3AEPFcA0eEgo/3jFypiLiHGj9Sq09dfC68PGl6l
-      klyMYlEVuymVjWOGvtyvCs4Z/lpFkcg93Qj6tamMUGOKsQB6poIAlYjLnGD1FLtvWRzqah
-      eFORpgr9BPzegrpqgSqxQ/2hx0qdwvcY9mqDbA4Oayavz3zVgvr6kGSt1LvCbgsFi5IPCF
-      aKqknRmQkmz0WC65gebAIz+YbWDbnwPI4yOTMNycP4Vmk4XLUj39b/aa2+3wITd2AzMu8T
-      VY1yGEUzQwFiGcl3TRVIWYMe7JTPAKkwAhD983r4ctKkXOv8OBTacDEXFy5WCNMDFBRZNr
-      NKhviXsGqQAAA+BXfTduV303bgAAAAdzc2gtcnNhAAABAQCesHKmoUxNRTdrcAQ8VwDR4S
-      Cj/eMXKmIuIcaP1KrT118Lrw8aXqWSXIxiURW7KZWNY4a+3K8Kzhn+WkWRyD3dCPq1qYxQ
-      Y4qxAHqmggCViMucYPUUu29ZHOpqF4U5GmCv0E/N6CumqBKrFD/aHHSp3C9xj2aoNsDg5r
-      Jq/PfNWC+vqQZK3Uu8JuCwWLkg8IVoqqSdGZCSbPRYLrmB5sAjP5htYNufA8jjI5Mw3Jw/
-      hWaThctSPf1v9prb7fAhN3YDMy7xNVjXIYRTNDAWIZyXdNFUhZgx7slM8AqTACEP3zevhy
-      0qRc6/w4FNpwMRcXLlYI0wMUFFk2s0qG+JewapAAAAAwEAAQAAAQBUiifqQZAGslM992Uq
-      SCd1qHvdIcqzcq7vaKsBwQho5xoJfW+MWtPWT1uynQP4u8SimF0WnTbbiMUsTic17PmYIc
-      p+sR7BTOZ8OYcd4bAx+biPTNAEBX7ieJchgfpFW5oaz91UEtX+aRfY8Ga76eD1BQp5cy37
-      e3/x0LVIbhAN4pBZzsFkHLPBS+pPhzYqqtIQz2IvfKUQ4MV39rENFRBJNIUClsmyO50kQm
-      0Z7eWE7NtdmSCL6kS5YwT2xKmJebWPjeXV041ujX2ysErlYL5dprBUM7rlkTPJhqpYUtK5
-      ZsjuH4t4AuhOQMo9lAzfh+FZ20+ciCwDwSda3s/gMRsBAAAAgQCLj4KHc5ebQWSWQJ9/9P
-      pL8nYBkScrH1p12rx4dDFQxVkAqgOfaWfs6BvMQVmlqeiZrsi5OmMTtkJOnIaJrrYVGoim
-      gzSaQT1wEPnE4Le/UD2iuRgwRXzhcdmL+0XnqSEoIcsSJySzftcuOlSbyDy8I2wwA+pOhM
-      so7cPZyOgkCgAAAIEAz9akadyx98UXGnfRCf3ltjNMoB0w4P8N51mVdCiG2I5NXEgLKAUT
-      5xkr8239tyoUiWxMeQu07u1yFBvifpFRyxgY7ZiUWI828EbrzuFlztB36LPD/CmQDgJ1N4
-      y0j2b6XrIgq3i879sLyV7AqWNf8tSMBKB4sptXSmkxgQ5WSpkAAACBAMN2L2TB1IO2ii7B
-      E13hljwvEMWVBRZOAkephzYZfqkyVeTeX82q4TUR9YCcaauIqG0J+qTQoEBbe32K2CFB+Z
-      bZEa5SJtIwdfprlouLjPtLF/cNKBelUxe3cvrNatOETzFhpOhR1Kev9gZXlpnTdSPIh2MJ
-      LL2uJEo8nY17YraRAAAAI2xvcmVuem9AbG9yZW56b20zbWFjLmR5bmRucy5jZXJuLmNoAQ
-      IDBAUGBw==
-      -----END OPENSSH PRIVATE KEY-----
-
-    # yamllint disable rule:line-length
-    # Use simple http server on scheduler for health checks
-    # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
-    # yamllint enable rule:line-length
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-    # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
-    # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    ELSEVIER_SFTP_PORT: 22
   volumes:
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
-    - ./plugins:/opt/airflow/plugins
-    - ./airflow.cfg:/opt/airflow/airflow.cfg
-    - ./tests:/opt/airflow/tests
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/base-images/airflow/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/tests:/opt/airflow/tests
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     redis:
@@ -126,14 +89,12 @@ services:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-    expose:
-      - 5432
-    ports:
-      - 5432:5432
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "airflow"]
+      test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 10s
       retries: 5
       start_period: 5s
@@ -143,10 +104,8 @@ services:
     image: docker.io/library/redis:latest
     expose:
       - 6379
-    ports:
-      - 6379:6379
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 30s
       retries: 50
@@ -157,24 +116,19 @@ services:
     image: atmoz/sftp
     ports:
       - "2222:22"
-    volumes:
-      - ./ssh/user_keys/fake_key.pub:/home/airflow/.ssh/keys/fake_key.pub:ro
-      - ./data:/home/airflow/upload
-    command: airflow:airflow:::upload
-    restart: always
-
-  ftp:
-    container_name: ftp-server
-    image: garethflowers/ftp-server
     environment:
-      - FTP_USER=airflow
-      - FTP_PASS=airflow
-    restart: always
-    ports:
-      - "20-21:20-21/tcp"
-      - "40000-40009:40000-40009/tcp" # passive mode
+      SFTP_PUBLIC_KEY: |
+        ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEXAMPLEKEY user@host
     volumes:
       - ./data:/home/airflow/upload
+    command: >
+      sh -c "
+        mkdir -p /home/airflow/.ssh/keys &&
+        echo \"$SFTP_PUBLIC_KEY\" > /home/airflow/.ssh/keys/env_key.pub &&
+        chmod 600 /home/airflow/.ssh/keys/env_key.pub &&
+        exec /entrypoint airflow:airflow:::upload
+      "
+    restart: always
 
   s3:
     image: minio/minio
@@ -196,13 +150,13 @@ services:
     entrypoint: >
       /bin/sh -c " sleep 10; /usr/bin/mc alias set airflow http://s3:9000 airflow Airflow01; /usr/bin/mc mb airflow/scoap3; /usr/bin/mc mb airflow/springer; /usr/bin/mc mb airflow/aps; /usr/bin/mc mb airflow/hindawi; /usr/bin/mc mb airflow/iop; /usr/bin/mc mb airflow/elsevier; /usr/bin/mc mb airflow/oup; /usr/bin/mc mb airflow/jagiellonian; /usr/bin/mc anonymous set download airflow/scoap3; /usr/bin/mc anonymous set download airflow/springer; /usr/bin/mc anonymous set download airflow/aps; /usr/bin/mc anonymous set download airflow/hindawi; /usr/bin/mc anonymous set download airflow/iop; /usr/bin/mc anonymous set download airflow/elsevier; /usr/bin/mc anonymous set download airflow/oup; /usr/bin/mc anonymous set download airflow/jagiellonian; exit 0; "
 
-  airflow-webserver:
+  airflow-apiserver:
     <<: *airflow-common
-    command: webserver
+    command: api-server
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/api/v2/version" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -217,11 +171,22 @@ services:
     <<: *airflow-common
     command: scheduler
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"',
-        ]
+      test: [ "CMD", "curl", "--fail", "http://localhost:8974/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-dag-processor:
+    <<: *airflow-common
+    command: dag-processor
+    healthcheck:
+      test: [ "CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"' ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -235,22 +200,23 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+    container_name: airflow-worker
     healthcheck:
       test:
         - "CMD-SHELL"
-        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 30s
     environment:
       <<: *airflow-common-env
-      # Required to handle warm shutdown of the celery workers properly
-      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
+      airflow-apiserver:
+        condition: service_healthy
       airflow-init:
         condition: service_completed_successfully
 
@@ -258,11 +224,7 @@ services:
     <<: *airflow-common
     command: triggerer
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"',
-        ]
+      test: [ "CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"' ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -276,13 +238,9 @@ services:
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
-    # yamllint disable rule:line-length
     command:
       - -c
       - |
-        function ver() {
-          printf "%04d%04d%04d%04d" $${1//./ }
-        }
         if [[ -z "${AIRFLOW_UID}" ]]; then
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
@@ -291,6 +249,7 @@ services:
           echo "For other operating systems you can get rid of the warning with manually created .env file:"
           echo "    See: https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#setting-the-right-airflow-user"
           echo
+          export AIRFLOW_UID=$$(id -u)
         fi
         one_meg=1048576
         mem_available=$$(($$(getconf _PHYS_PAGES) * $$(getconf PAGE_SIZE) / one_meg))
@@ -325,23 +284,51 @@ services:
           echo "   https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#before-you-begin"
           echo
         fi
-        mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
         if [ -f /opt/airflow/connections.json ]; then
           exec /entrypoint connections import /opt/airflow/connections.json
         fi
-        exec /entrypoint airflow version
+        echo
+        echo "Creating missing opt dirs if missing:"
+        echo
+        mkdir -v -p /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Airflow version:"
+        /entrypoint airflow version
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Running airflow config list to create default config file if missing."
+        echo
+        /entrypoint airflow config list >/dev/null
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Change ownership of files in /opt/airflow to ${AIRFLOW_UID}:0"
+        echo
+        chown -R "${AIRFLOW_UID}:0" /opt/airflow/
+        echo
+        echo "Change ownership of files in shared volumes to ${AIRFLOW_UID}:0"
+        echo
+        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config}
+        echo
+        echo "Files in shared volumes:"
+        echo
+        ls -la /opt/airflow/{logs,dags,plugins,config}
+
     # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
-      _AIRFLOW_DB_UPGRADE: "true"
-      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}:/sources
       - ./connections.json:/opt/airflow/connections.json
 
   airflow-cli:
@@ -356,6 +343,8 @@ services:
       - bash
       - -c
       - airflow
+    depends_on:
+      <<: *airflow-common-depends-on
 
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
@@ -368,7 +357,7 @@ services:
     ports:
       - "5555:5555"
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      test: [ "CMD", "curl", "--fail", "http://localhost:5555/" ]
       interval: 30s
       timeout: 10s
       retries: 5

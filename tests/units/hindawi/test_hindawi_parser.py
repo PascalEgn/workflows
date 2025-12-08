@@ -27,7 +27,7 @@ def parsed_articles(hindawi_parser, articles):
 
 
 @pytest.mark.parametrize(
-    "expected, key",
+    ("expected", "key"),
     [
         pytest.param(
             [
@@ -246,7 +246,7 @@ def test_hindawi_parsing(parsed_articles, expected, key):
     for (
         expected_value,
         article,
-    ) in zip(expected, parsed_articles):
+    ) in zip(expected, parsed_articles, strict=False):
         assert article[key] == expected_value
 
 

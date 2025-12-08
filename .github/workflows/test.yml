@@ -1,0 +1,29 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: The reference to build
+        type: string
+        required: true
+      build_target:
+        description: The build target to use
+        type: string
+        required: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6.0.1
+        with:
+          ref: ${{ github.ref }}
+      - name: Run Docker Compose
+        run: BUILD_TARGET=${{ inputs.build_target }} docker compose up -d
+      - name: Run Tests
+        run: docker compose exec airflow-worker pytest
+      - name: Stop Docker Compose
+        if: always()
+        run: docker compose down --volumes

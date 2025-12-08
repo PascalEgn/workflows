@@ -1,30 +1,30 @@
 import os
 import xml.etree.ElementTree as ET
 
+import pytest
 from common.parsing.xml_extractors import RequiredFieldNotFoundExtractionError
 from common.utils import parse_without_names_spaces
 from oup.parser import OUPParser
-from pytest import fixture, raises
 
 
-@fixture(scope="module")
+@pytest.fixture(scope="module")
 def parser():
     return OUPParser()
 
 
-@fixture
+@pytest.fixture
 def valid_articles(shared_datadir):
     articles = []
     valid_article_names = ["ptac108.xml", "ptac113.xml", "ptac120.xml", "ptab170.xml"]
     for filename in sorted(valid_article_names):
         with open(os.path.join(shared_datadir, filename)) as file:
             articles.append(parse_without_names_spaces(file.read()))
-    yield articles
+    return articles
 
 
-@fixture()
+@pytest.fixture
 def parsed_articles(parser, valid_articles):
-    yield [parser._publisher_specific_parsing(article) for article in valid_articles]
+    return [parser._publisher_specific_parsing(article) for article in valid_articles]
 
 
 def test_dois(parsed_articles):
@@ -42,7 +42,7 @@ def test_no_doi_article(shared_datadir, parser):
     article_name = "ptac108_without_doi.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -50,7 +50,7 @@ def test_no_doi_value_article(shared_datadir, parser):
     article_name = "ptac108_without_doi_value.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -100,7 +100,7 @@ def test_no_doc_type_article(shared_datadir, parser):
         assert "journal_doctype" not in article
 
 
-@fixture
+@pytest.fixture
 def other_doc_type_article(shared_datadir, parser):
     article_name = "ptac113_other_journal_doc_type.xml"
     with open(shared_datadir / article_name) as file:
@@ -109,7 +109,7 @@ def other_doc_type_article(shared_datadir, parser):
 
 
 def test_other_journal_doc_types(other_doc_type_article):
-    assert "other" == other_doc_type_article["journal_doctype"]
+    assert other_doc_type_article["journal_doctype"] == "other"
 
 
 def test_arxiv(parsed_articles):
@@ -119,7 +119,7 @@ def test_arxiv(parsed_articles):
         [{"value": "2207.02498"}],
         [{"value": "2205.14599"}],
     ]
-    for doc_type, article_doc_type in zip(doc_types, parsed_articles):
+    for doc_type, article_doc_type in zip(doc_types, parsed_articles, strict=False):
         assert doc_type == article_doc_type["arxiv_eprints"]
 
 
@@ -227,7 +227,7 @@ def test_no_authors(shared_datadir, parser):
     article_name = "patc120_without_authors.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -279,7 +279,7 @@ def test_no_authors_value(shared_datadir, parser):
     article_name = "ptac120_without_authors_value.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -298,7 +298,7 @@ def test_no_abstract(shared_datadir, parser):
     article_name = "ptac120_no_abstract.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -306,7 +306,7 @@ def test_no_abstract_value(shared_datadir, parser):
     article_name = "ptac120_no_abstract_value.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -325,7 +325,7 @@ def test_no_title(shared_datadir, parser):
     article_name = "ptac108_no_title.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -341,7 +341,7 @@ def test_no_journal_volume(shared_datadir, parser):
     article_name = "ptab170_no_journal_volume.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -349,7 +349,7 @@ def test_no_title_value(shared_datadir, parser):
     article_name = "ptac108_no_title_value.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -403,7 +403,7 @@ def test_no_journal_volume_value(shared_datadir, parser):
     article_name = "ptab170_no_journal_volume_value.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -419,7 +419,7 @@ def test_no_journal_year(shared_datadir, parser):
     article_name = "ptab170_no_journal_volume.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -427,7 +427,7 @@ def test_no_year_volume_value(shared_datadir, parser):
     article_name = "ptab170_no_journal_volume_value.xml"
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -518,7 +518,7 @@ def test_no_journal_title(shared_datadir, parser):
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
         article = parser._publisher_specific_parsing(content)
-        article["journal_title"] == "Prog. Theor. Exp. Phys"
+        assert article["journal_title"] == "Prog. Theor. Exp. Phys."
 
 
 def test_no_journal_title_and_pubmed(shared_datadir, parser):
@@ -526,14 +526,14 @@ def test_no_journal_title_and_pubmed(shared_datadir, parser):
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
         article = parser._publisher_specific_parsing(content)
-        article["journal_title"] == "PTEPHY"
+        assert article["journal_title"] == "PTEPHY"
 
 
 def test_no_journal_title_no_pubmed_no_publisher(shared_datadir, parser):
     article_name = "ptab170_no_journal_title_no_pubmed_no_publisher.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -572,7 +572,7 @@ def test_licenses_no_license(shared_datadir, parser):
     article_name = "ptac113_without_license.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -581,7 +581,7 @@ def test_no_journal_title_value(shared_datadir, parser):
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
         article = parser._publisher_specific_parsing(content)
-        article["journal_title"] == "Prog. Thezor. Exp. Phys"
+        assert article["journal_title"] == "Prog. Theor. Exp. Phys."
 
 
 def test_no_journal_title_and_pubmed_value(shared_datadir, parser):
@@ -589,14 +589,14 @@ def test_no_journal_title_and_pubmed_value(shared_datadir, parser):
     with open(shared_datadir / article_name) as file:
         content = parse_without_names_spaces(file.read())
         article = parser._publisher_specific_parsing(content)
-        article["journal_title"] == "PTEPHY"
+        assert article["journal_title"] == "PTEPHY"
 
 
 def test_no_journal_title_no_pubmed_no_publisher_value(shared_datadir, parser):
     article_name = "ptab170_no_journal_title_no_pubmed_no_publisher_value.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -604,7 +604,7 @@ def test_licenses_no_license_value(shared_datadir, parser):
     article_name = "ptac113_without_license_value.xml"
     with open(shared_datadir / article_name) as file:
         content = ET.fromstring(file.read())
-        with raises(RequiredFieldNotFoundExtractionError):
+        with pytest.raises(RequiredFieldNotFoundExtractionError):
             parser._publisher_specific_parsing(content)
 
 
@@ -621,7 +621,7 @@ def test_collections(parsed_articles):
     assert set(collections) == set(collections_parsed_article)
 
 
-@fixture
+@pytest.fixture
 def article_with_orcid(parser, shared_datadir):
     with open(os.path.join(shared_datadir, "oup_orcid.xml")) as file:
         content = parse_without_names_spaces(file.read())

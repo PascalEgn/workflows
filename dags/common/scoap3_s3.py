@@ -1,12 +1,12 @@
+import logging
 import os
 from uuid import uuid4
 
 import requests
 from common.repository import IRepository
 from common.s3_service import S3Service
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 FILE_EXTENSIONS = {"pdf": ".pdf", "xml": ".xml", "pdfa": ".pdf"}
 
@@ -43,7 +43,7 @@ class Scoap3Repository(IRepository):
         filename = update_filename_extension(filename, type)
         destination_key = f"{self.upload_dir}/{prefix}/{filename}"
 
-        logger.info("Copying file from", copy_source=copy_source)
+        logger.info("Copying file from %s", copy_source)
         self.client.copy(
             copy_source,
             self.bucket,
@@ -57,9 +57,7 @@ class Scoap3Repository(IRepository):
                 "ACL": "public-read",
             },
         )
-        logger.info(
-            f"Copied file from {source_bucket}/{source_key} to {self.bucket}/{destination_key}"
-        )
+        logger.info("Copied file from %s to %s", source_key, destination_key)
         return f"{self.bucket}/{destination_key}"
 
     def copy_files(self, bucket, files, prefix=None):
@@ -70,7 +68,12 @@ class Scoap3Repository(IRepository):
                     bucket, path, prefix=prefix, type=type
                 )
             except Exception as e:
-                logger.error("Failed to copy file.", error=str(e), type=type, path=path)
+                logger.error(
+                    "Failed to copy file. Error: %s Type: %s Path: %s",
+                    str(e),
+                    type,
+                    path,
+                )
         return copied_files
 
     def download_files(self, files, prefix=None):
@@ -84,10 +87,13 @@ class Scoap3Repository(IRepository):
                 downloaded_files[type] = self.download_and_upload_to_s3(
                     url, prefix=prefix, type=type
                 )
-                logger.info("Downloaded file", type=type, url=url)
+                logger.info("Downloaded file %s from %s", type, url)
             except Exception as e:
                 logger.error(
-                    "Failed to download file.", error=str(e), type=type, url=url
+                    "Failed to download file. Error: %s Type: %s URL: %s",
+                    str(e),
+                    type,
+                    url,
                 )
         return downloaded_files
 
@@ -105,10 +111,13 @@ class Scoap3Repository(IRepository):
                 downloaded_files[type] = self.download_and_upload_to_s3(
                     url, prefix=prefix, headers=headers, type=type
                 )
-                logger.info("Downloaded file", type=type, url=url)
+                logger.info("Downloaded file %s from %s", type, url)
             except Exception as e:
                 logger.error(
-                    "Failed to download file.", error=str(e), type=type, url=url
+                    "Failed to download file. Error: %s Type: %s URL: %s",
+                    str(e),
+                    type,
+                    url,
                 )
         return downloaded_files
 
@@ -127,7 +136,7 @@ class Scoap3Repository(IRepository):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            logger.error("Failed to download file", error=str(e), url=url)
+            logger.error("Failed to download file. Error: %s URL: %s", str(e), url)
             return
 
         try:
@@ -144,8 +153,8 @@ class Scoap3Repository(IRepository):
             return f"{self.bucket}/{destination_key}"
         except Exception as e:
             logger.error(
-                "Failed to upload file",
-                error=str(e),
-                bucket=self.bucket,
-                key=destination_key,
+                "Failed to upload file. Error: %s Bucket: %s Key: %s",
+                str(e),
+                self.bucket,
+                destination_key,
             )

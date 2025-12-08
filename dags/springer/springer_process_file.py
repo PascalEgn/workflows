@@ -1,9 +1,10 @@
 import base64
+import logging
 import xml.etree.ElementTree as ET
 
 import pendulum
 import requests
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from common.cleanup import (
     clean_inline_expressions,
     clean_whitespace_characters,
@@ -24,9 +25,8 @@ from inspire_utils.record import get_value
 from jsonschema import validate
 from springer.parser import SpringerParser
 from springer.repository import SpringerRepository
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def process_xml(input):
@@ -71,7 +71,11 @@ def springer_validate_record(enriched_file):
     return enriched_file
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    tags=["process", "springer"],
+    start_date=pendulum.today("UTC").add(days=-1),
+)
 def springer_process_file():
     s3_client = SpringerRepository()
 
@@ -97,7 +101,7 @@ def springer_process_file():
             logger.info("No files to populate")
             return parsed_file
 
-        logger.info("Populating files", files=parsed_file["files"])
+        logger.info("Populating files: %s", parsed_file["files"])
 
         s3_client_bucket = SpringerRepository().bucket
         s3_scoap3_client = Scoap3Repository()
@@ -106,7 +110,7 @@ def springer_process_file():
             s3_client_bucket, parsed_file["files"], prefix=doi
         )
         parsed_file["files"] = files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated: %s", parsed_file["files"])
         return parsed_file
 
     @task()

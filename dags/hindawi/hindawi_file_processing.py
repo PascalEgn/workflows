@@ -1,7 +1,8 @@
+import logging
 import xml.etree.ElementTree as ET
 
 import pendulum
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from common.enhancer import Enhancer
 from common.enricher import Enricher
 from common.exceptions import EmptyOutputFromPreviousTask
@@ -10,9 +11,8 @@ from common.utils import create_or_update_article, upload_json_to_s3
 from hindawi.parser import HindawiParser
 from hindawi.repository import HindawiRepository
 from inspire_utils.record import get_value
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def parse_hindawi(xml):
@@ -28,7 +28,11 @@ def enrich_hindawi(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    start_date=pendulum.today("UTC").add(days=-1),
+    tags=["process", "hindawi"],
+)
 def hindawi_file_processing():
     s3_client = HindawiRepository()
 
@@ -58,7 +62,7 @@ def hindawi_file_processing():
             return parsed_file
 
         doi = get_value(parsed_file, "dois.value[0]")
-        logger.info("Populating files", doi=doi)
+        logger.info("Populating files. DOI: %s", doi)
         doi_part = doi.split("10.1155/")[1]
         files = {
             "pdf": f"https://s3.amazonaws.com/downloads.hindawi.com/journals/ahep/{doi_part}.pdf",
@@ -68,7 +72,7 @@ def hindawi_file_processing():
         s3_scoap3_client = Scoap3Repository()
         downloaded_files = s3_scoap3_client.download_files(files, prefix=doi)
         parsed_file["files"] = downloaded_files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated. Files: %s", parsed_file["files"])
         return parsed_file
 
     @task()

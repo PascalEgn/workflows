@@ -1,16 +1,20 @@
-from datetime import date, timedelta
+from datetime import timedelta
 
 
 class APSParams:
     def __init__(
         self,
-        from_date=(date.today() - timedelta(days=1)).strftime("%Y-%m-%d"),
-        until_date=date.today().strftime("%Y-%m-%d"),
+        from_date=None,
+        until_date=None,
         date="modified",
         journals="",
         set="scoap3",
         per_page: int = 100,
     ):
+        if not from_date:
+            from_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        if not until_date:
+            until_date = date.today().strftime("%Y-%m-%d")
         self.from_date = from_date
         self.until_date = until_date
         self.date = date

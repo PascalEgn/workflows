@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+import pytest
 from common.parsing.extractor import IExtractor
 from common.parsing.parser import ObjectExtractor
 from common.parsing.xml_extractors import (
@@ -8,7 +9,6 @@ from common.parsing.xml_extractors import (
     RequiredFieldNotFoundExtractionError,
     TextExtractor,
 )
-from pytest import fixture, raises
 
 TEST_XML_STRING = """
     <Root>
@@ -23,14 +23,14 @@ TEST_XML_STRING = """
 """
 
 
-@fixture
+@pytest.fixture
 def xml_node():
     return ET.fromstring(TEST_XML_STRING)
 
 
 def test_extractor_extract_raises_error():
     extractor = IExtractor([])
-    raises(NotImplementedError, extractor.extract, root=ET.Element("root"))
+    pytest.raises(NotImplementedError, extractor.extract, root=ET.Element("root"))
 
 
 def test_object_extractor(xml_node):
@@ -88,7 +88,7 @@ def test_not_existant_required_field_extraction(xml_node):
             TextExtractor("text_value", "./FieldOne/UnexistantField"),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         text_extractor_with_not_found_required_field.extract(xml_node)
 
     text_extractor_with_not_found_required_field_value = ObjectExtractor(
@@ -97,7 +97,7 @@ def test_not_existant_required_field_extraction(xml_node):
             TextExtractor("text_value", "./FieldOne/Empty"),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         text_extractor_with_not_found_required_field_value.extract(xml_node)
 
     attribute_extractor_with_not_found_required_field = ObjectExtractor(
@@ -108,7 +108,7 @@ def test_not_existant_required_field_extraction(xml_node):
             ),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         attribute_extractor_with_not_found_required_field.extract(xml_node)
 
     attribute_extractor_with_not_found_required_field_value = ObjectExtractor(
@@ -119,7 +119,7 @@ def test_not_existant_required_field_extraction(xml_node):
             ),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         attribute_extractor_with_not_found_required_field_value.extract(xml_node)
 
     custom_extractor_with_not_found_required_field = ObjectExtractor(
@@ -128,7 +128,7 @@ def test_not_existant_required_field_extraction(xml_node):
             CustomExtractor("custom_value", extract_empty_value, required=True),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         custom_extractor_with_not_found_required_field.extract(xml_node)
 
 
@@ -144,5 +144,5 @@ def test_custom_extractor_with_json_not_serializable_value(xml_node):
             ),
         ],
     )
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         custom_extractor_with_json_not_serializable_value.extract(xml_node)

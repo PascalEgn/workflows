@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 from common.cleanup import (
     clean_collaboration,
     clean_whitespace_characters,
@@ -28,7 +26,7 @@ def pipe_functions(functions, value):
 
 
 class IParser:
-    extractors: List[IExtractor]
+    extractors: list[IExtractor]
 
     def __init__(self, extractors):
         self.extractors = extractors
@@ -41,8 +39,10 @@ class IParser:
         }
         return extracted_value
 
-    def _generic_parsing(self, publisher_parsed_article: Dict):
-        def get(field, default=[]):
+    def _generic_parsing(self, publisher_parsed_article: dict):
+        def get(field, default=None):
+            if default is None:
+                default = []
             return publisher_parsed_article.get(field, default)
 
         parsed_article = publisher_parsed_article.copy()

@@ -1,12 +1,12 @@
 import xml.etree.ElementTree as ET
 
+import pytest
 from common.parsing.xml_extractors import (
     AttributeExtractor,
     CustomExtractor,
     RequiredFieldNotFoundExtractionError,
     TextExtractor,
 )
-from pytest import fixture, raises
 
 TEST_XML_STRING = """
     <Root>
@@ -20,7 +20,7 @@ TEST_XML_STRING = """
 """
 
 
-@fixture
+@pytest.fixture
 def xml_node():
     return ET.fromstring(TEST_XML_STRING)
 
@@ -32,7 +32,9 @@ def test_text_extractor(xml_node: ET.Element):
 
 def test_text_extractor_crash_on_required(xml_node: ET.Element):
     extractor = TextExtractor(None, "./FieldOne/UnexistantField")
-    raises(RequiredFieldNotFoundExtractionError, extractor.extract, article=xml_node)
+    pytest.raises(
+        RequiredFieldNotFoundExtractionError, extractor.extract, article=xml_node
+    )
 
 
 def test_text_extractor_returns_default_if_not_found(xml_node: ET.Element):

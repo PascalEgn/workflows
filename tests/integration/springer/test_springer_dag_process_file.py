@@ -9,7 +9,6 @@ from airflow.utils.state import DagRunState
 from busypie import SECOND, wait
 from common.utils import check_dagrun_state
 from freezegun import freeze_time
-from pytest import fixture, raises
 from springer.springer_process_file import (
     springer_enhance_file,
     springer_enrich_file,
@@ -20,7 +19,7 @@ from springer.springer_process_file import (
 DAG_NAME = "springer_process_file"
 
 
-@fixture
+@pytest.fixture
 def dag():
     dagbag = DagBag(dag_folder="dags/", include_examples=False)
     assert dagbag.import_errors.get(f"dags/{DAG_NAME}.py") is None
@@ -28,11 +27,6 @@ def dag():
 
 
 @pytest.fixture
-def dag_was_paused(dag):
-    return dag.get_is_paused()
-
-
-@fixture
 def article():
     data_dir = "./data/springer/JHEP/"
     test_file = "ftp_PUB_19-01-29_20-02-10_JHEP.zip"
@@ -54,7 +48,7 @@ def article():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 6
+    assert len(dag.tasks) == 7
 
 
 @pytest.mark.skip(reason="It does not test anything.")
@@ -146,7 +140,7 @@ expected_output_from_empty_input = {
 
 
 @pytest.mark.parametrize(
-    "test_input, expected, publisher",
+    ("test_input", "expected", "publisher"),
     [
         pytest.param(generic_pseudo_parser_output, expected_output, publisher),
         pytest.param(
@@ -281,8 +275,10 @@ def test_dag_validate_file_pass(article):
 
 def test_dag_validate_file_fails(article):
     article = {}
-    raises(Exception, springer_validate_record, article)
+    with pytest.raises(KeyError):
+        springer_validate_record(article)
 
 
 def test_dag_process_file_no_input_file(article):
-    raises(Exception, springer_parse_file)
+    with pytest.raises(Exception, match="There was no 'file' parameter. Exiting run."):
+        springer_parse_file()

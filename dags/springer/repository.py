@@ -1,11 +1,11 @@
+import logging
 import os
 from io import BytesIO
 
 from common.repository import IRepository
 from common.s3_service import S3Service
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 class SpringerRepository(IRepository):
@@ -35,7 +35,7 @@ class SpringerRepository(IRepository):
             file_parts = file.split("/")
             last_part = file_parts[-1]
             filename_without_extension = last_part.split(".")[0]
-            if filename_without_extension not in ret_dict.keys():
+            if filename_without_extension not in ret_dict:
                 ret_dict[filename_without_extension] = dict()
             ret_dict[filename_without_extension][
                 "xml" if self.is_meta(last_part) else "pdf"

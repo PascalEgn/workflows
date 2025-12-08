@@ -1,6 +1,5 @@
 import zipfile
 from io import BytesIO
-from typing import List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,14 +8,14 @@ from common.repository import IRepository
 from common.sftp_service import SFTPService
 from structlog import get_logger
 
-SFTP_NOT_ZIP_FILES: List[str] = ["file2.png"]
-SFTP_ZIP_FILES: List[str] = [
+SFTP_NOT_ZIP_FILES: list[str] = ["file2.png"]
+SFTP_ZIP_FILES: list[str] = [
     "file1.zip",
     "file2.zip",
 ]
-SFTP_LIST_FILES_RETURN_VALUE: List[str] = SFTP_NOT_ZIP_FILES + SFTP_ZIP_FILES
+SFTP_LIST_FILES_RETURN_VALUE: list[str] = SFTP_NOT_ZIP_FILES + SFTP_ZIP_FILES
 
-REPO_FIND_ALL_RETURN_VALUE: List[dict] = [
+REPO_FIND_ALL_RETURN_VALUE: list[dict] = [
     {"xml": f, "pdf": f} for f in SFTP_LIST_FILES_RETURN_VALUE
 ]
 
@@ -66,14 +65,13 @@ def test_migrate_from_ftp(
                 "params": {
                     "force_pull": False,
                     "excluded_directories": [],
-                    "force_pull": False,
                     "filenames_pull": {
                         "enabled": False,
                         "filenames": [],
                         "force_from_ftp": False,
                     },
                 },
-            }
+            },
         )
         assert repo_save.call_count == len(SFTP_ZIP_FILES) + pow(len(SFTP_ZIP_FILES), 2)
 
@@ -101,14 +99,13 @@ def test_migrate_from_ftp_only_one_file(
                 "params": {
                     "force_pull": False,
                     "excluded_directories": [],
-                    "force_pull": False,
                     "filenames_pull": {
                         "enabled": False,
                         "filenames": [],
                         "force_from_ftp": False,
                     },
                 }
-            }
+            },
         )
         assert repo_save.call_count == len(SFTP_ZIP_FILES[0:1]) + pow(
             len(SFTP_ZIP_FILES[0:1]), 2
@@ -146,7 +143,7 @@ def test_migrate_from_ftp_only_one_file_but_force_flag(
                         "force_from_ftp": False,
                     },
                 }
-            }
+            },
         )
         assert repo_save.call_count == len(SFTP_ZIP_FILES) + pow(len(SFTP_ZIP_FILES), 2)
 
@@ -182,7 +179,7 @@ def test_migrate_from_ftp_specified_file_force_from_ftp(
                         "force_from_ftp": True,
                     },
                 }
-            }
+            },
         )
         assert repo_save.call_count == 3
 
@@ -220,21 +217,25 @@ def test_migrate_from_ftp_specified_file(
                     "force_from_ftp": False,
                 },
             }
-        }
+        },
     )
     assert repo_save.call_count == 0
     assert repo_find_by_id.call_count == 1
     assert repo_is_meta.call_count == 2
 
 
-@patch("common.pull_ftp.trigger_dag.trigger_dag")
-@patch.object(IRepository, attribute="get_by_id", return_value=BytesIO())
+@patch.object(IRepository, attribute="get_by_id", return_value=BytesIO(b"test content"))
 @patch.object(
-    IRepository, attribute="find_all", return_value=REPO_FIND_ALL_RETURN_VALUE
+    IRepository,
+    attribute="find_all",
+    return_value=[{"xml": f} for f in SFTP_LIST_FILES_RETURN_VALUE],
 )
-def test_trigger_file_processing(*args):
+def test_trigger_file_processing(repo_find_all, repo_get_by_id):
     repo = IRepository()
-    files = trigger_file_processing(
+    confs = trigger_file_processing(
         "test", repo, get_logger().bind(class_name="test_logger")
     )
-    assert files == SFTP_LIST_FILES_RETURN_VALUE
+    assert len(confs) == 3
+    assert "file" in confs[0]
+    assert "file_name" in confs[0]
+    assert confs[0]["file_name"] == SFTP_LIST_FILES_RETURN_VALUE[0]

@@ -18,7 +18,7 @@ string_with_new_lines = " Simple   input  \n  with  \n spaces "
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(string, expected_string, id="test_clean_whitespace_characters"),
         pytest.param(
@@ -61,7 +61,7 @@ no_tags = '<p content-type="scoap3">Article funded by SCOAP</p>'
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             sup, expected_string_sup, id="test_convert_html_subscripts_to_latex_sup"
@@ -106,7 +106,7 @@ xml_just_title_with_id = '<article-title id="1">example</article-title>'
 
 
 @pytest.mark.parametrize(
-    "test_input, expected, tags, attributes",
+    ("test_input", "expected", "tags", "attributes"),
     [
         pytest.param(xml, xml_just_p, {"p"}, {}, id="test_keep_p"),
         pytest.param(xml, xml_just_div, {"div"}, {}, id="test_keep_div"),
@@ -163,7 +163,7 @@ collaboration_string_cleaned = (
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             collaboration_string,
@@ -187,7 +187,7 @@ def test_clean_collaboration(test_input, expected):
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             xml_with_label,
@@ -235,7 +235,7 @@ empty = {"affiliations": []}
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             test_object,
@@ -254,7 +254,7 @@ def test_clean_all_affiliations_for_author(test_input, expected):
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             {"curated": "Test Value", "citeable": "Test Value"},
@@ -273,7 +273,7 @@ def test_remove_unnecessary_fields(test_input, expected):
 
 
 @pytest.mark.parametrize(
-    "test_input, expected",
+    ("test_input", "expected"),
     [
         pytest.param(
             {

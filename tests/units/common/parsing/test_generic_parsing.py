@@ -1,3 +1,4 @@
+import pytest
 from common.parsing.generic_parsing import (
     classification_numbers,
     clear_unnecessary_fields,
@@ -14,29 +15,32 @@ from common.parsing.generic_parsing import (
     split_fullname,
     take_first,
 )
-from pytest import mark, param
 
 take_first_expected = "TestValue"
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param([None, "TestValue"], take_first_expected, id="Array contains None"),
-        param(["", "TestValue"], take_first_expected, id="Array contains empty string"),
-        param(["TestValue"], take_first_expected, id="Array correct value"),
-        param([None, ""], None, id="Array is incorrect"),
+        pytest.param(
+            [None, "TestValue"], take_first_expected, id="Array contains None"
+        ),
+        pytest.param(
+            ["", "TestValue"], take_first_expected, id="Array contains empty string"
+        ),
+        pytest.param(["TestValue"], take_first_expected, id="Array correct value"),
+        pytest.param([None, ""], None, id="Array is incorrect"),
     ],
 )
 def test_take_first(test_input, expected):
     assert expected == take_first(test_input)
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param([], [], id="Array is empty"),
-        param(
+        pytest.param([], [], id="Array is empty"),
+        pytest.param(
             [1, "TestValue", None, ""],
             [{"value": 1}, {"value": "TestValue"}],
             id="Array contains multiple values",
@@ -48,17 +52,17 @@ def test_list_to_value_dict(test_input, expected):
 
 
 def test_list_to_value_dict_with_custom_key():
-    assert [
+    assert list_to_value_dict([1, "TestValue", None], "my_key") == [
         {"my_key": 1},
         {"my_key": "TestValue"},
-    ] == list_to_value_dict([1, "TestValue", None], "my_key")
+    ]
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param([], "", id="Array is empty"),
-        param(
+        pytest.param([], "", id="Array is empty"),
+        pytest.param(
             ["", "TestValue", "Test"],
             "TestValue Test",
             id="Array contains multiple values",
@@ -70,14 +74,14 @@ def test_join(test_input, expected):
 
 
 def test_join_with_custom_separator():
-    assert "TestValue,Test" == join(["", "TestValue", "Test"], ",")
+    assert join(["", "TestValue", "Test"], ",") == "TestValue,Test"
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param([], [], id="Array is empty"),
-        param(
+        pytest.param([], [], id="Array is empty"),
+        pytest.param(
             ["", "TestValue", "Test"],
             [
                 {"standard": "PACS", "classification_number": "TestValue"},
@@ -92,16 +96,16 @@ def test_classification_numbers(test_input, expected):
 
 
 def test_classification_numbers_with_custom_standard():
-    assert [
+    assert classification_numbers(["", "TestValue"], "test_standard") == [
         {"standard": "test_standard", "classification_number": "TestValue"}
-    ] == classification_numbers(["", "TestValue"], "test_standard")
+    ]
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param([], [], id="Array is empty"),
-        param(
+        pytest.param([], [], id="Array is empty"),
+        pytest.param(
             ["", "TestValue", "Test"],
             [
                 {"source": "author", "value": "TestValue"},
@@ -116,32 +120,32 @@ def test_free_keywords(test_input, expected):
 
 
 def test_free_keywords_with_custom_source():
-    assert [{"source": "test_source", "value": "TestValue"}] == free_keywords(
-        ["", "TestValue"], "test_source"
-    )
+    assert free_keywords(["", "TestValue"], "test_source") == [
+        {"source": "test_source", "value": "TestValue"}
+    ]
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param("", "", id="Publication date is empty"),
-        param("3", "0003-01-01", id="Publication date contains one value"),
-        param("3-2", "0003-02-01", id="Publication date contains two values"),
-        param("1999-10-05", "1999-10-05", id="Publication date is correct"),
+        pytest.param("", "", id="Publication date is empty"),
+        pytest.param("3", "0003-01-01", id="Publication date contains one value"),
+        pytest.param("3-2", "0003-02-01", id="Publication date contains two values"),
+        pytest.param("1999-10-05", "1999-10-05", id="Publication date is correct"),
     ],
 )
 def test_fix_publication_date(test_input, expected):
     assert expected == fix_publication_date(test_input)
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param("Doe, John Magic", ("Doe", "John Magic")),
-        param("Doe Boe, John Magic", ("Doe Boe", "John Magic")),
-        param("John Magic Doe", ("Doe", "John Magic")),
-        param("John Magic Doe Boe", ("Boe", "John Magic Doe")),
-        param("", ("", ""), id="Author is empty"),
+        pytest.param("Doe, John Magic", ("Doe", "John Magic")),
+        pytest.param("Doe Boe, John Magic", ("Doe Boe", "John Magic")),
+        pytest.param("John Magic Doe", ("Doe", "John Magic")),
+        pytest.param("John Magic Doe Boe", ("Boe", "John Magic Doe")),
+        pytest.param("", ("", ""), id="Author is empty"),
     ],
 )
 def test_split_fullname(test_input, expected):
@@ -149,18 +153,18 @@ def test_split_fullname(test_input, expected):
 
 
 def test_collapse_initials():
-    assert "F.M. Lastname" == collapse_initials("F. M. Lastname")
+    assert collapse_initials("F. M. Lastname") == "F.M. Lastname"
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param(
+        pytest.param(
             {"surname": "Test Surname"},
             {"full_name": "Test Surname", "surname": "Test Surname"},
             id="Only surname is present",
         ),
-        param(
+        pytest.param(
             {"raw_name": "Firstname Lastname"},
             {
                 "full_name": "Lastname, Firstname",
@@ -176,15 +180,15 @@ def test_parse_author(test_input, expected):
     assert expected == parse_author(test_input)
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param(
+        pytest.param(
             {"surname": "Test Surname", "affiliations": "Test Affiliation"},
             {"full_name": "Test Surname", "affiliations": "Test Affiliation"},
             id="Only surname is present",
         ),
-        param(
+        pytest.param(
             {"raw_name": "Firstname Lastname", "affiliations": "Test Affiliation"},
             {"full_name": "Lastname, Firstname", "affiliations": "Test Affiliation"},
             id="Only raw_name is present",
@@ -195,10 +199,10 @@ def test_parse_thesis_supervisors(test_input, expected):
     assert expected == parse_thesis_supervisors(test_input)
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param(
+        pytest.param(
             {
                 "journal_title": "Test Value",
                 "journal_volume": "Test Value",
@@ -226,7 +230,7 @@ def test_parse_thesis_supervisors(test_input, expected):
             ],
             id="Some values populated",
         ),
-        param(
+        pytest.param(
             {
                 "journal_title": "NUPHB",
                 "journal_volume": "Test Value",
@@ -254,7 +258,7 @@ def test_parse_thesis_supervisors(test_input, expected):
             ],
             id="Test journal title NUPHB to Nuclear Physics B",
         ),
-        param(
+        pytest.param(
             {
                 "journal_title": "PLB",
                 "journal_volume": "Test Value",
@@ -282,7 +286,7 @@ def test_parse_thesis_supervisors(test_input, expected):
             ],
             id="Test journal title PLB to Physics Letters B",
         ),
-        param(
+        pytest.param(
             {
                 "journal_title": "Test Value",
                 "journal_volume": "Test Value",
@@ -305,7 +309,7 @@ def test_parse_thesis_supervisors(test_input, expected):
             ],
             id="Some values missing",
         ),
-        param(
+        pytest.param(
             {
                 "journal_title": "Test Value",
                 "journal_volume": "Test Value",
@@ -339,30 +343,30 @@ def test_publication_info(test_input, expected):
     assert expected == publication_info(test_input)
 
 
-@mark.parametrize(
-    "test_input, expected",
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
     [
-        param(
+        pytest.param(
             {"dois": ["test_doi_1"], "related_article_doi": ["test_doi_2"]},
             ["test_doi_1", "test_doi_2"],
             id="Both fields contain values",
         ),
-        param(
+        pytest.param(
             {"dois": ["test_doi_1"], "related_article_doi": []},
             ["test_doi_1"],
             id="Only dois contains values",
         ),
-        param(
+        pytest.param(
             {"dois": [], "related_article_doi": ["test_doi_2"]},
             ["test_doi_2"],
             id="Only related_article_doi contains values",
         ),
-        param(
+        pytest.param(
             {"dois": [], "related_article_doi": []},
             [],
             id="None contains values",
         ),
-        param(
+        pytest.param(
             {"dois": ["test_doi_1"]},
             ["test_doi_1"],
             id="related_article_doi is missing",
@@ -386,7 +390,7 @@ def test_clear_unnecessary_fields():
         "pubinfo_freetext": "Test Value",
         "related_article_doi": "Test Value",
     }
-    assert {} == clear_unnecessary_fields(article)
+    assert clear_unnecessary_fields(article) == {}
 
 
 def test_remove_empty_values():
@@ -405,9 +409,9 @@ def test_remove_empty_values():
         "empty_value": None,
         "empty_nested_dicts": {"key": {"key": {"key": None}}},
     }
-    assert {
+    assert remove_empty_values(article) == {
         "dict_full": {"key": "value"},
         "array_full": ["value"],
         "dict_half_empty": {"key": "value"},
         "array_half_empty": [["value"], "test"],
-    } == remove_empty_values(article)
+    }

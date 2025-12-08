@@ -19,25 +19,19 @@ def dag():
 
 
 @pytest.fixture
-def dag_was_paused(dag):
-    return dag.get_is_paused()
-
-
-@pytest.fixture
 def iop_empty_repo():
     repo = IOPRepository()
     repo.delete_all()
-    yield repo
+    return repo
 
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 3
 
 
 def test_dag_run(dag, dag_was_paused: bool, iop_empty_repo):
     assert len(iop_empty_repo.find_all()) == 0
-    dag.clear()
     dag.test()
     expected_files = [
         {
@@ -104,7 +98,7 @@ def test_dag_migrate_from_FTP(iop_empty_repo):
         migrate_from_ftp(
             sftp,
             iop_empty_repo,
-            get_logger().bind(class_name="test_logge"),
+            get_logger().bind(class_name="test_logger"),
             **{
                 "params": {
                     "excluded_directories": [],
@@ -118,7 +112,7 @@ def test_dag_migrate_from_FTP(iop_empty_repo):
             },
         )
 
-        time.sleep(5)
+        time.sleep(1)
 
         expected_files = [
             {
@@ -193,6 +187,7 @@ def test_dag_migrate_from_FTP(iop_empty_repo):
 
 def test_dag_trigger_file_processing():
     repo = IOPRepository()
-    assert [x["xml"] for x in repo.find_all()] == trigger_file_processing(
+    confs = trigger_file_processing(
         "iop", repo, get_logger().bind(class_name="test_logger")
     )
+    assert [x["xml"] for x in repo.find_all()] == [x["file_name"] for x in confs]

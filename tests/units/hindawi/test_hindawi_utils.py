@@ -29,22 +29,21 @@ class MockedHindawiApiClient:
         return hindawi_xml
 
 
-def test_set_Hindawi_harvesting_interval(repo=MockedRepo()):
+def test_set_Hindawi_harvesting_interval():
     today = date.today().strftime("%Y-%m-%d")
     expected_days = {
         "from_date": today,
         "until_date": today,
     }
-    dates = set_harvesting_interval(repo)
+    dates = set_harvesting_interval(MockedRepo())
     assert dates == expected_days
 
 
 def test_save_file_in_s3():
     today = date.today()
-    repo = MockedRepo()
-    expected_key = f'{today}/{ datetime.now().strftime("%Y-%m-%dT%H:%M")}.xml'
+    expected_key = f"{today}/{datetime.now().strftime('%Y-%m-%dT%H:%M')}.xml"
     data = str.encode(hindawi_xml)
-    key = save_file_in_s3(data, repo)
+    key = save_file_in_s3(data, MockedRepo())
     assert key == expected_key
 
 

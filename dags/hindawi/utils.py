@@ -2,8 +2,6 @@ from datetime import date, datetime
 from io import BytesIO
 from xml.etree import ElementTree
 
-from airflow.api.common import trigger_dag
-
 
 def save_file_in_s3(data, repo):
     if not data:
@@ -30,15 +28,3 @@ def split_xmls(repo, key):
                 )
 
     return ids_and_records
-
-
-def trigger_file_processing_DAG(records):
-    if not records:
-        return
-    for record in records:
-        trigger_dag.trigger_dag(
-            dag_id="hindawi_file_processing",
-            conf={"record": record},
-            replace_microseconds=False,
-        )
-    return records

@@ -1,7 +1,8 @@
 import json
+import logging
 
 import pendulum
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from aps.parser import APSParser
 from aps.repository import APSRepository
 from common.enhancer import Enhancer
@@ -10,9 +11,8 @@ from common.exceptions import EmptyOutputFromPreviousTask
 from common.scoap3_s3 import Scoap3Repository
 from common.utils import create_or_update_article, upload_json_to_s3
 from inspire_utils.record import get_value
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def parse_aps(data):
@@ -29,7 +29,11 @@ def enrich_aps(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    start_date=pendulum.today("UTC").add(days=-1),
+    tags=["process", "aps"],
+)
 def aps_process_file():
     s3_client = APSRepository()
 
@@ -57,7 +61,7 @@ def aps_process_file():
             return parsed_file
 
         doi = get_value(parsed_file, "dois.value[0]")
-        logger.info("Populating files", doi=doi)
+        logger.info("Populating files for doi: %s", doi)
 
         files = {
             "pdf": f"http://harvest.aps.org/v2/journals/articles/{doi}",
@@ -66,7 +70,7 @@ def aps_process_file():
         s3_scoap3_client = Scoap3Repository()
         downloaded_files = s3_scoap3_client.download_files_for_aps(files, prefix=doi)
         parsed_file["files"] = downloaded_files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated: %s", parsed_file["files"])
         return parsed_file
 
     @task()

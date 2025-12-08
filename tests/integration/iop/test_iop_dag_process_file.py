@@ -6,24 +6,23 @@ from common.utils import parse_to_ET_element
 from freezegun import freeze_time
 from iop.iop_process_file import iop_enhance_file, iop_enrich_file
 from iop.parser import IOPParser
-from pytest import fixture
 
 DAG_NAME = "iop_process_file"
 
 
-@fixture
+@pytest.fixture
 def dag():
     dagbag = DagBag(dag_folder="dags/", include_examples=False)
     assert dagbag.import_errors.get(f"dags/{DAG_NAME}.py") is None
     return dagbag.get_dag(dag_id=DAG_NAME)
 
 
-@fixture
+@pytest.fixture
 def parser():
     return IOPParser()
 
 
-@fixture
+@pytest.fixture
 def article(parser):
     data_dir = "./data/iop/"
     test_file = "2022-07-30T03_02_01_content.zip"
@@ -118,7 +117,7 @@ expected_output_from_empty_input = {
 
 
 @pytest.mark.parametrize(
-    "test_input, expected, publisher",
+    ("test_input", "expected", "publisher"),
     [
         pytest.param(generic_pseudo_parser_output, expected_output, publisher),
         pytest.param(
