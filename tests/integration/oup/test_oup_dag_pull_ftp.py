@@ -27,7 +27,7 @@ def test_dag_loaded(dag):
     assert len(dag.tasks) == 4
 
 
-def test_dag_run(dag, dag_was_paused, oup_empty_repo):
+def test_dag_run(dag, oup_empty_repo):
     assert len(oup_empty_repo.find_all()) == 0
     dag.test()
     expected_files = [
