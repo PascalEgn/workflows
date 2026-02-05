@@ -1,17 +1,18 @@
+import logging
 import os
 from datetime import datetime
 
 from common.parsing.parser import IParser
 from common.parsing.xml_extractors import CustomExtractor
 from common.utils import extract_text, get_license_type_and_version_from_url
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class ElsevierMetadataParser(IParser):
     def __init__(self, file_path):
         self.file_path = file_path
         self.year = None
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self.extractors = [
             CustomExtractor(
                 destination="dois",
@@ -74,7 +75,7 @@ class ElsevierMetadataParser(IParser):
             return
         dois = node.text
         if dois:
-            self.logger.msg("Parsing dois for article", dois=dois)
+            logger.info("Parsing dois for article. Dois: %s", dois)
             self.dois = dois
             return [dois]
         return

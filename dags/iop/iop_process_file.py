@@ -1,8 +1,9 @@
 import base64
+import logging
 import xml.etree.ElementTree as ET
 
 import pendulum
-from airflow.decorators import dag, task
+from airflow.sdk import dag, task
 from common.cleanup import (
     convert_html_italics_to_latex,
     convert_html_subscripts_to_latex,
@@ -16,9 +17,8 @@ from common.utils import create_or_update_article, upload_json_to_s3
 from inspire_utils.record import get_value
 from iop.parser import IOPParser
 from iop.repository import IOPRepository
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def process_xml(input, italics=True):
@@ -65,7 +65,11 @@ def iop_enrich_file(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    start_date=pendulum.today("UTC").add(days=-1),
+    tags=["process", "iop"],
+)
 def iop_process_file():
     s3_client = IOPRepository()
 
@@ -91,7 +95,7 @@ def iop_process_file():
             logger.info("No files to populate")
             return parsed_file
 
-        logger.info("Populating files", files=parsed_file["files"])
+        logger.info("Populating files. Files: %s", parsed_file["files"])
 
         s3_client_bucket = IOPRepository().bucket
         s3_scoap3_client = Scoap3Repository()
@@ -100,7 +104,7 @@ def iop_process_file():
             s3_client_bucket, parsed_file["files"], prefix=doi
         )
         parsed_file["files"] = files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated. Files: %s", parsed_file["files"])
         return parsed_file
 
     @task()

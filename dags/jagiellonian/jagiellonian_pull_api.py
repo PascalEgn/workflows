@@ -1,16 +1,14 @@
+import logging
 import os
 from datetime import timedelta
 
 import pendulum
-from airflow import settings
-from airflow.api.common import trigger_dag
-from airflow.decorators import dag, task
-from airflow.models import DagRun
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.http.hooks.http import HttpHook
-from structlog import get_logger
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.sdk import dag, task
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 def get_latest_s3_file():
@@ -46,7 +44,8 @@ default_args = {
 @dag(
     default_args=default_args,
     description="Transfer Crossref journal data to S3",
-    schedule="30 */2 * * *",
+    schedule="35 */6 * * *",
+    tags=["pull", "jagiellonian"],
     start_date=pendulum.today("UTC").add(days=-1),
     catchup=False,
 )
@@ -57,12 +56,12 @@ def jagiellonian_pull_api(from_date=None):
         endpoint_filter = ""
 
         if from_date_param:
-            logger.info(f"Using provided from_date: {from_date_param}")
+            logger.info("Using provided from_date: %s", from_date_param)
             endpoint_filter = f"from-created-date:{from_date_param}"
         else:
             latest_s3_file = get_latest_s3_file()
             if latest_s3_file:
-                logger.info(f"Using latest S3 file date: {latest_s3_file}")
+                logger.info("Using latest S3 file date: %s", latest_s3_file)
                 endpoint_filter = f"from-created-date:{latest_s3_file}"
             else:
                 logger.info(
@@ -113,32 +112,19 @@ def jagiellonian_pull_api(from_date=None):
 
         return filtered_items
 
-    @task(task_id="jagiellonian_trigger_file_processing")
-    def trigger_file_processing(data):
-        for article in data:
-            trigger_result = trigger_dag.trigger_dag(
-                dag_id="jagiellonian_process_file",
-                conf={"article": article},
-                replace_microseconds=False,
-            )
-
-            note = article.get("DOI", "DOI not found")
-            run_id = trigger_result.run_id
-            session = settings.Session()
-            try:
-                dag_run = session.query(DagRun).filter(DagRun.run_id == run_id).one()
-                dag_run.note = note
-                session.commit()
-                logger.info(f"Updated note for DAG run {run_id}")
-            except Exception as e:
-                logger.error(f"Failed to update note for DAG run {run_id}: {e}")
-                session.rollback()
-            finally:
-                session.close()
+    @task(task_id="prepare_trigger_conf")
+    def prepare_trigger_conf(data):
+        return [{"article": article} for article in data]
 
     data = fetch_crossref_api(from_date)
     filtered_data = filter_arxiv_category(data)
-    trigger_file_processing(filtered_data)
+    trigger_confs = prepare_trigger_conf(filtered_data)
+
+    TriggerDagRunOperator.partial(
+        task_id="jagiellonian_trigger_file_processing",
+        trigger_dag_id="jagiellonian_process_file",
+        reset_dag_run=True,
+    ).expand(conf=trigger_confs)
 
 
 jagiellonian_pull_api_dag = jagiellonian_pull_api()

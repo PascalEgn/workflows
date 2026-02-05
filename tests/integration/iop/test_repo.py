@@ -1,17 +1,17 @@
 import time
 
+import pytest
 from common.pull_ftp import migrate_from_ftp
 from iop.repository import IOPRepository
 from iop.sftp_service import IOPSFTPService
-from pytest import fixture
 from structlog import get_logger
 
 
-@fixture
+@pytest.fixture
 def iop_empty_repo():
     repo = IOPRepository()
     repo.delete_all()
-    yield repo
+    return repo
 
 
 def test_pull_from_sftp(iop_empty_repo):
@@ -33,10 +33,10 @@ def test_pull_from_sftp(iop_empty_repo):
                         "force_from_ftp": False,
                     },
                 }
-            }
+            },
         )
 
-        time.sleep(5)
+        time.sleep(1)
 
         expected_files = [
             {

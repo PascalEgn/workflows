@@ -4,21 +4,49 @@ on:
   push:
     branches: [main]
 
-jobs:
-  test:
-    uses: ./.github/workflows/test-and-build.yml
-    with:
-      ref: ${{ github.ref }}
-    secrets: inherit
+env:
+  IMAGE: cern-sis/scoap3/workflows-dev
 
+jobs:
   pre-commit:
     uses: ./.github/workflows/pre-commit.yml
     with:
       ref: ${{ github.ref }}
     secrets: inherit
 
+  test:
+    needs: pre-commit
+    uses: ./.github/workflows/test.yml
+    with:
+      ref: ${{ github.ref }}
+      build_target: dev
+    secrets: inherit
+
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      airflow: ${{ steps.filter.outputs.airflow }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            airflow:
+              - 'base-images/airflow/**'
+
+  build-and-push:
+    needs: [test, check-changes]
+    if: needs.check-changes.outputs.airflow == 'true'
+    uses: ./.github/workflows/build-and-push.yml
+    with:
+      ref: ${{ github.ref }}
+      image: cern-sis/scoap3/workflows-dev
+      build_target: dev
+      dockerfile: base-images/airflow/Dockerfile
+    secrets: inherit
+
   deploy:
-    needs: [test, pre-commit]
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: send event
@@ -27,5 +55,5 @@ jobs:
           event-type: update
           repo: cern-sis/kubernetes-airflow
           images: |
-            cern-sis/scoap3/workflows@${{ needs.test.outputs.image-id }}
+            cern-sis/scoap3/workflows-dev@${{ needs.build-and-push.outputs.image-id }}
           token: ${{ secrets.PAT_FIRE_EVENTS_ON_CERN_SIS_KUBERNETES }}

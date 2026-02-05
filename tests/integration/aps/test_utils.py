@@ -20,10 +20,9 @@ def dag():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 3
+    assert len(dag.tasks) == 4
 
 
-@pytest.mark.vcr
 def test_aps_pull_api(dag):
     repo = APSRepository()
     repo.delete_all()
@@ -50,7 +49,6 @@ def test_dag_run(dag):
     repo = APSRepository()
     repo.delete_all()
     assert len(repo.find_all()) == 0
-    dag.clear()
     dag.test(
         run_conf={
             "from_date": "2022-02-07",

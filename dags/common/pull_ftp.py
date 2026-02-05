@@ -1,26 +1,26 @@
 import base64
 import io
+import logging
 import os
 import tarfile
 import zipfile
-from datetime import datetime, timezone
 
-from airflow.api.common import trigger_dag
 from common.utils import process_archive
-from structlog import PrintLogger
+
+logger = logging.getLogger("airflow.task")
 
 
 def migrate_files(
     archives_names,
     s_ftp,
     repo,
-    logger: PrintLogger,
+    logger,
     process_archives=True,
 ):
-    logger.msg("Processing files.", filenames=archives_names)
+    logger.info("Processing files: %s", archives_names)
     extracted_or_downloaded_filenames = []
     for archive_name in archives_names:
-        logger.msg("Getting file from SFTP.", file=archive_name)
+        logger.info("Getting file from SFTP: %s", archive_name)
         file_bytes = s_ftp.get_file(archive_name)
 
         if (
@@ -30,7 +30,7 @@ def migrate_files(
             and tarfile.is_tarfile(file_bytes)
         ):
             if process_archives:
-                for (archive_file_content, s3_filename) in process_archive(
+                for archive_file_content, s3_filename in process_archive(
                     file_bytes=file_bytes, file_name=archive_name
                 ):
                     repo.save(s3_filename, io.BytesIO(archive_file_content))
@@ -47,8 +47,8 @@ def migrate_files(
 
         else:
             logger.info(
-                "File is not zip or tar, processing the next one",
-                file_name=archive_name,
+                "File is not zip or tar, processing the next one: %s",
+                archive_name,
             )
             continue
     return extracted_or_downloaded_filenames
@@ -80,7 +80,7 @@ def migrate_from_ftp(
 
 
 def reprocess_files(repo, logger, **kwargs):
-    logger.msg("Processing specified filenames.")
+    logger.info("Processing specified filenames.")
     filenames_pull_params = kwargs["params"]["filenames_pull"]
     filenames = filenames_pull_params["filenames"]
     return _find_files_in_zip(filenames, repo)
@@ -92,7 +92,7 @@ def _force_pull(
     logger,
     **kwargs,
 ):
-    logger.msg("Force Pulling from SFTP.")
+    logger.info("Force Pulling from SFTP.")
     excluded_directories = kwargs["params"]["excluded_directories"]
     filenames = s_ftp.list_files(excluded_directories=excluded_directories)
     return migrate_files(filenames, s_ftp, repo, logger)
@@ -106,7 +106,7 @@ def _filenames_pull(
 ):
     filenames_pull_params = kwargs["params"]["filenames_pull"]
     filenames = filenames_pull_params["filenames"]
-    logger.msg("Pulling specified filenames from SFTP")
+    logger.info("Pulling specified filenames from SFTP")
     return migrate_files(filenames, s_ftp, repo, logger)
 
 
@@ -130,14 +130,14 @@ def _differential_pull(
     logger,
     **kwargs,
 ):
-    logger.msg("Pulling missing files only.")
+    logger.info("Pulling missing files only.")
     excluded_directories = kwargs["params"]["excluded_directories"]
     sftp_files = s_ftp.list_files(excluded_directories=excluded_directories)
-    logger.msg(sftp_files)
+    logger.info("SFTP files: %s", sftp_files)
     s3_files = repo.get_all_raw_filenames()
-    logger.msg(s3_files)
+    logger.info("S3 files: %s", s3_files)
     diff_files = list(filter(lambda x: x not in s3_files, sftp_files))
-    logger.msg(diff_files)
+    logger.info("Diff files: %s", diff_files)
     return migrate_files(diff_files, s_ftp, repo, logger)
 
 
@@ -148,28 +148,21 @@ def trigger_file_processing(
     filenames=None,
     article_splitter_function=lambda x: [x],
 ):
-    files = []
+    confs = []
     if filenames is not None:
         files = filenames
     else:
         files = list(map(lambda x: x["xml"], repo.find_all()))
 
-    for filename in files:
-        logger.msg("Running processing.", filename=filename)
-        file_bytes = repo.get_by_id(filename)
+    if not files:
+        logger.info("No files to process.")
+        return []
+    else:
+        for filename in files:
+            logger.info("Running processing for file: %s", filename)
+            file_bytes = repo.get_by_id(filename)
 
-        for article in article_splitter_function(file_bytes):
-            _id = _generate_id(publisher)
-            encoded_article = base64.b64encode(article.getvalue()).decode()
-            trigger_dag.trigger_dag(
-                dag_id=f"{publisher}_process_file",
-                run_id=_id,
-                conf={"file": encoded_article, "file_name": filename},
-                replace_microseconds=False,
-            )
-    return files
-
-
-def _generate_id(publisher):
-    logs_date = datetime.now(timezone.utc)
-    return f'{publisher}__{logs_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z")}'
+            for article in article_splitter_function(file_bytes):
+                encoded_article = base64.b64encode(article.getvalue()).decode()
+                confs.append({"file": encoded_article, "file_name": filename})
+        return confs

@@ -1,25 +1,25 @@
 from io import BytesIO
 
+import pytest
 from common.repository import IRepository
-from pytest import fixture, raises
 
 
-@fixture
+@pytest.fixture
 def repo():
     return IRepository()
 
 
 def test_find_all(repo):
-    raises(NotImplementedError, repo.find_all)
+    pytest.raises(NotImplementedError, repo.find_all)
 
 
 def test_test_find_by_id(repo):
-    raises(NotImplementedError, repo.get_by_id, id="")
+    pytest.raises(NotImplementedError, repo.get_by_id, id="")
 
 
 def test_save(repo):
-    raises(NotImplementedError, repo.save, filename="", obj=BytesIO())
+    pytest.raises(NotImplementedError, repo.save, filename="", obj=BytesIO())
 
 
 def test_delete_all(repo):
-    raises(NotImplementedError, repo.delete_all)
+    pytest.raises(NotImplementedError, repo.delete_all)

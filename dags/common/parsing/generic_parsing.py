@@ -64,7 +64,7 @@ def parse_author(author):
         author["surname"], author["given_names"] = split_fullname(author["raw_name"])
     if "given_names" in author and author["given_names"]:
         author["given_names"] = collapse_initials(author["given_names"])
-        author["full_name"] = "{0}, {1}".format(
+        author["full_name"] = "{}, {}".format(
             author.get("surname", ""), author["given_names"]
         )
     else:

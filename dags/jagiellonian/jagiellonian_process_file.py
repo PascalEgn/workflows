@@ -1,18 +1,18 @@
 import json
+import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pendulum
-from airflow.decorators import dag, task
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.amazon.aws.transfers.http_to_s3 import HttpToS3Operator
+from airflow.sdk import dag, task
 from common.enhancer import Enhancer
 from common.enricher import Enricher
 from common.utils import create_or_update_article
 from jagiellonian.parser import JagiellonianParser
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 FILE_EXTENSIONS = {"pdf": ".pdf", "xml": ".xml", "pdfa": ".pdf"}
 
@@ -27,7 +27,11 @@ def update_filename_extension(filename, type):
         return f"{filename}{extension}"
 
 
-@dag(schedule=None, start_date=pendulum.today("UTC").add(days=-1))
+@dag(
+    schedule=None,
+    start_date=pendulum.today("UTC").add(days=-1),
+    tags=["process", "jagiellonian"],
+)
 def jagiellonian_process_file():
     @task(task_id="jagiellonian-parse")
     def parse(**kwargs):
@@ -50,7 +54,7 @@ def jagiellonian_process_file():
             return parsed_file
 
         doi = parsed_file.get("dois")[0]["value"]
-        logger.info("Populating files", doi=doi)
+        logger.info("Populating files for doi: %s", doi)
         files = parsed_file.get("files")
 
         prefix = doi
@@ -66,7 +70,6 @@ def jagiellonian_process_file():
 
                 transfer_to_s3 = HttpToS3Operator(
                     task_id="transfer-to-s3",
-                    http_conn_id=None,
                     endpoint=url,
                     s3_bucket=scoap3_bucket,
                     s3_key=destination_key,
@@ -77,14 +80,17 @@ def jagiellonian_process_file():
                 transfer_to_s3.execute(context={})
 
                 downloaded_files[type] = f"{scoap3_bucket}/{destination_key}"
-                logger.info("Downloaded file", type=type, url=url)
+                logger.info("Downloaded file of type: %s from url: %s", type, url)
             except Exception as e:
                 logger.error(
-                    "Failed to download file", error=str(e), type=type, url=url
+                    "Failed to download file. Error: %s. Type: %s. URL: %s",
+                    str(e),
+                    type,
+                    url,
                 )
 
         parsed_file["files"] = downloaded_files
-        logger.info("Files populated", files=parsed_file["files"])
+        logger.info("Files populated: %s", parsed_file["files"])
 
         return parsed_file
 
@@ -102,7 +108,7 @@ def jagiellonian_process_file():
         aws_conn_id = os.getenv("AWS_CONN_ID", "aws_s3_minio")
 
         doi = enriched_file["dois"][0]["value"]
-        key = f"{doi}_metadata_{(datetime.now(timezone.utc))}.json"
+        key = f"{doi}_metadata_{(datetime.now(UTC))}.json"
 
         s3_hook = S3Hook(aws_conn_id=aws_conn_id)
 

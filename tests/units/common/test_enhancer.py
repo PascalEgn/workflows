@@ -795,7 +795,7 @@ expected_wrong_author_affiliation_2 = {
 
 
 @pytest.mark.parametrize(
-    "test_input, expected, publisher",
+    ("test_input", "expected", "publisher"),
     [
         pytest.param(generic_pseudo_parser_output, expected_output, publisher),
         pytest.param(
@@ -837,7 +837,7 @@ def test_all_contructors(test_input, expected, publisher):
 
 @pytest.mark.skip
 @pytest.mark.parametrize(
-    "test_input, expected, publisher",
+    ("test_input", "expected", "publisher"),
     [
         pytest.param(
             wrong_author_affiliation,

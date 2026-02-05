@@ -16,25 +16,19 @@ def dag():
 
 
 @pytest.fixture
-def dag_was_paused(dag):
-    return dag.get_is_paused()
-
-
-@pytest.fixture
 def oup_empty_repo():
     repo = OUPRepository()
     repo.delete_all()
-    yield repo
+    return repo
 
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 4
 
 
 def test_dag_run(dag, dag_was_paused, oup_empty_repo):
     assert len(oup_empty_repo.find_all()) == 0
-    dag.clear()
     dag.test()
     expected_files = [
         {
@@ -91,6 +85,7 @@ def test_dag_migrate_from_FTP(oup_empty_repo):
 
 def test_dag_trigger_file_processing():
     repo = OUPRepository()
-    assert [x["xml"] for x in repo.find_all()] == trigger_file_processing(
+    confs = trigger_file_processing(
         "oup", repo, get_logger().bind(class_name="test_logger")
     )
+    assert [x["xml"] for x in repo.find_all()] == [x["file_name"] for x in confs]

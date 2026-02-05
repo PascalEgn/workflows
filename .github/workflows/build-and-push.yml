@@ -1,0 +1,52 @@
+name: Build and push
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: The reference to build
+        type: string
+        required: true
+
+      image:
+        description: The image to build
+        type: string
+        required: true
+      dockerfile:
+        description: The dockerfile to use
+        type: string
+        required: true
+      build_target:
+        description: The build target to use
+        type: string
+        required: false
+      build_args:
+        description: The build args to use
+        type: string
+        required: false
+    outputs:
+      image-id:
+        description: The ID of image that has been built
+        value: ${{ jobs.build-and-push.outputs.image-id }}
+
+jobs:
+  build-and-push:
+    name: Build and push
+    runs-on: ubuntu-latest
+    outputs:
+      image-id: ${{ steps.build.outputs.image-id }}
+    steps:
+      - uses: cern-sis/gh-workflows/.github/actions/docker-build@v6.5.0
+        id: build
+        with:
+          image: ${{ inputs.image }}
+          dockerfile: ${{ inputs.dockerfile }}
+          stage: ${{ inputs.build_target }}
+          build-args: ${{ inputs.build_args }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+          push: true
+          registry: registry.cern.ch
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_SECRET }}

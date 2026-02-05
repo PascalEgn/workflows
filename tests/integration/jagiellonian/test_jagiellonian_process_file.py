@@ -1,14 +1,12 @@
-import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 from urllib.parse import urlparse
 
 import boto3
 import pytest
-from airflow.models import Connection, DagBag, DagRun, TaskInstance
-from airflow.utils.session import create_session
-from botocore.config import Config
+from airflow.models import DagBag
+from botocore.client import Config
 
 endpoint = os.getenv("S3_ENDPOINT", "s3")
 parsed = urlparse(endpoint if "://" in endpoint else f"http://{endpoint}")
@@ -23,31 +21,14 @@ def dagbag():
 @pytest.mark.usefixtures("dagbag")
 class TestJagiellonianProcessFile:
     def setup_method(self):
-        with create_session() as session:
-            session.query(Connection).filter(
-                Connection.conn_id == "aws_s3_minio_test"
-            ).delete()
-            conn = Connection(
-                conn_id="aws_s3_minio_test",
-                conn_type="aws",
-                host="s3",
-                port=9000,
-                login="airflow",
-                password="Airflow01",
-                extra=json.dumps(
-                    {
-                        "endpoint_url": f"http://{MINIO_HOST}:9000",
-                        "region_name": "us-east-1",
-                        "verify": False,
-                    }
-                ),
-            )
-            session.add(conn)
-
-            session.commit()
+        os.environ["AIRFLOW_CONN_AWS_S3_MINIO_TEST"] = (
+            f"aws://airflow:Airflow01@{MINIO_HOST}:9000"
+            f"?endpoint_url=http%3A%2F%2F{MINIO_HOST}%3A9000"
+            "&region_name=us-east-1&verify=false"
+        )
 
         self.dag_id = "jagiellonian_process_file"
-        self.execution_date = datetime.now(timezone.utc)
+        self.execution_date = datetime.now(UTC)
 
         self.dag = DagBag(dag_folder="dags/", include_examples=False).get_dag(
             self.dag_id
@@ -76,21 +57,8 @@ class TestJagiellonianProcessFile:
                 )
 
     def teardown_method(self):
-        with create_session() as session:
-            session.query(TaskInstance).filter(
-                TaskInstance.dag_id == self.dag_id
-            ).delete(synchronize_session="fetch")
-
-            session.query(DagRun).filter(DagRun.dag_id == self.dag_id).delete(
-                synchronize_session="fetch"
-            )
-
-            session.query(Connection).filter(
-                Connection.conn_id == "aws_s3_minio_test"
-            ).delete()
-
-            session.commit()
-
+        if "AIRFLOW_CONN_AWS_S3_MINIO_TEST" in os.environ:
+            del os.environ["AIRFLOW_CONN_AWS_S3_MINIO_TEST"]
         s3 = boto3.client(
             "s3",
             endpoint_url=f"http://{MINIO_HOST}:9000",

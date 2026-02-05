@@ -1,12 +1,12 @@
+import logging
 import os
 from io import BytesIO
 
 from common.repository import IRepository
 from common.s3_service import S3Service
 from common.utils import find_extension
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 class IOPRepository(IRepository):

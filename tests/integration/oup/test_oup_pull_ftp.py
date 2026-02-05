@@ -12,12 +12,12 @@ DAG_NAME = "oup_pull_ftp"
 def dag():
     dagbag = DagBag(dag_folder="dags/", include_examples=False)
     assert dagbag.import_errors.get(f"dags/{DAG_NAME}.py") is None
-    yield dagbag.get_dag(dag_id=DAG_NAME)
+    return dagbag.get_dag(dag_id=DAG_NAME)
 
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 4
 
 
 def test_dag_run(
@@ -26,7 +26,6 @@ def test_dag_run(
     repo = OUPRepository()
     repo.delete_all()
     assert len(repo.find_all()) == 0
-    dag.clear()
     dag.test()
     assert len(repo.find_all()) == 3
 

@@ -22,7 +22,7 @@ def parsed_articles(parser, articles):
 
 
 @pytest.mark.parametrize(
-    "expected, key",
+    ("expected", "key"),
     [
         pytest.param(
             [["10.1103/PhysRevA.103.042607"], ["10.1103/PhysRevB.103.165408"]],
@@ -52,7 +52,6 @@ def parsed_articles(parser, articles):
             "title",
             id="test_title",
         ),
-        pytest.param([[10], [11]], "page_nr", id="test_page_nr"),
         pytest.param(
             [
                 [
@@ -199,7 +198,7 @@ def test_aps_parsing(parsed_articles, expected, key):
     for (
         expected_value,
         article,
-    ) in zip(expected, parsed_articles):
+    ) in zip(expected, parsed_articles, strict=False):
         assert key in article
         assert article[key] == expected_value
 

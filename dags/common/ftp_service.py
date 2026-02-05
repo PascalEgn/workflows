@@ -1,12 +1,14 @@
 import ftplib
 import io
+import logging
 import os
 import re
 import traceback
 
 from common.exceptions import DirectoryNotFoundException, NotConnectedException
 from common.utils import append_not_excluded_files, walk_ftp
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class FTPService:
@@ -15,7 +17,7 @@ class FTPService:
         host="localhost",
         username="airflow",
         password="airflow",
-        port=21,
+        port=2222,
         dir="/upload",
     ):
         self.connection = None
@@ -23,7 +25,6 @@ class FTPService:
         self.username = username
         self.password = password
         self.port = port
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self.dir = dir
 
     def __connect(self):
@@ -31,10 +32,10 @@ class FTPService:
         ftp.login(self.username, self.password)
         try:
             ftp.dir(self.dir)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             raise DirectoryNotFoundException(
                 "Remote directory doesn't exist. Abort connection."
-            )
+            ) from e
         return ftp
 
     def __enter__(self):
@@ -48,9 +49,9 @@ class FTPService:
             formed_exception = traceback.format_exception_only(
                 exception_type, exception_value
             )
-            self.logger.error(
-                "An error occurred while exiting FTPService",
-                execption=formed_exception,
+            logger.error(
+                "An error occurred while exiting FTPService: %s",
+                formed_exception,
             )
             return False
         return True
@@ -67,15 +68,15 @@ class FTPService:
                     filtered_files,
                 )
             return filtered_files
-        except AttributeError:
-            raise NotConnectedException
+        except AttributeError as e:
+            raise NotConnectedException from e
 
     def get_file(self, file):
         try:
             file_contents = io.BytesIO()
             file_path = os.path.join(self.dir, file)
-            self.logger.msg("Downloading file ", file_path=file_path)
+            logger.info("Downloading file %s", file_path)
             self.connection.retrbinary(f"RETR {file_path}", file_contents.write)
             return file_contents
-        except AttributeError:
-            raise NotConnectedException
+        except AttributeError as e:
+            raise NotConnectedException from e

@@ -1,9 +1,11 @@
+import logging
 from os import getenv
 from xml.etree import ElementTree
 
 from common.request import Request
 from requests.exceptions import RequestException
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class HindawiApiClient:
@@ -18,7 +20,6 @@ class HindawiApiClient:
         self.files_url = files_url or getenv(
             "HINDAWI_API_FILES_URL", "http://downloads.hindawi.com"
         )
-        self.logger = get_logger().bind(class_name=type(self).__name__)
 
     def get_articles_metadata(self, parameters, doi=None):
         path_segments = ["oai-pmh", "oai.aspx"]
@@ -58,7 +59,7 @@ class HindawiApiClient:
             )
             return request.get_response_bytes()
         except RequestException:
-            self.logger.error("Request failed with exception.")
+            logger.error("Request failed with exception.")
 
     def __repr__(self):
         return f"<HindawiApiClient base_url={self.base_url}, \

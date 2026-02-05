@@ -1,10 +1,12 @@
+import logging
 import re
 
 from common.constants import ORGANIZATION_PARSING_PATTERN
 from common.parsing.parser import IParser
 from common.parsing.xml_extractors import ConstantExtractor, CustomExtractor
 from hindawi.xml_extractors import HindawiTextExtractor as TextExtractor
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class HindawiParser(IParser):
@@ -16,7 +18,6 @@ class HindawiParser(IParser):
     }
 
     def __init__(self):
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         extractors = [
             TextExtractor(
                 destination="dois",
@@ -131,7 +132,7 @@ class HindawiParser(IParser):
             self.prefixes,
         )
         if not arxivs:
-            self.logger.error("No arxiv id found.")
+            logger.error("No arxiv id found.")
             return None
 
         return [
@@ -173,7 +174,7 @@ class HindawiParser(IParser):
             "ns0:metadata/ns1:record/ns0:datafield/[@tag='540']/ns0:subfield/[@code='a']",
             self.prefixes,
         )
-        for license_url, license_text in zip(license_urls, license_texts):
+        for license_url, license_text in zip(license_urls, license_texts, strict=False):
             if license_url.text:
                 url_parts = license_url.text.split("/")
                 clean_url_parts = list(filter(bool, url_parts))
@@ -202,7 +203,7 @@ class HindawiParser(IParser):
         try:
             return int(copyright_year)
         except (ValueError, TypeError):
-            self.logger.error("Invalid copyright_year value: cannot parse to int")
+            logger.error("Invalid copyright_year value: cannot parse to int")
 
     def _get_publication_info(self, article):
         journals = article.findall(

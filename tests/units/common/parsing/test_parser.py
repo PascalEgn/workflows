@@ -1,13 +1,13 @@
 import json
 import xml.etree.ElementTree as ET
 
+import pytest
 from common.parsing.parser import IParser
 from common.parsing.xml_extractors import (
     AttributeExtractor,
     CustomExtractor,
     TextExtractor,
 )
-from pytest import fixture
 
 TEST_XML_STRING = """
     <Root>
@@ -21,17 +21,17 @@ TEST_XML_STRING = """
 """
 
 
-@fixture
+@pytest.fixture
 def publisher_parsed_article(datadir):
     return json.loads((datadir / "input.json").read_text())
 
 
-@fixture
+@pytest.fixture
 def expected_generic_parsing_output(datadir):
     return json.loads((datadir / "expected.json").read_text())
 
 
-@fixture
+@pytest.fixture
 def xml_node():
     return ET.fromstring(TEST_XML_STRING)
 

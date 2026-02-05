@@ -1,0 +1,14 @@
+structlog==25.5.0
+SQLAlchemy==2.0.44
+paramiko
+boto3
+backoff
+bleach==6.3.0
+idutils==1.5.0
+furl==2.1.4
+busypie==0.5.1
+pydantic
+jsonschema
+plyvel
+country_converter
+inspire-utils

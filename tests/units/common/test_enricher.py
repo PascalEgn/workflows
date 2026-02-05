@@ -13,7 +13,7 @@ def arxiv_output_content(datadir):
 
 
 def test_get_schema(enricher):
-    assert "http://repo.qa.scoap3.org/schemas/hep.json" == enricher._get_schema()
+    assert enricher._get_schema() == "http://repo.qa.scoap3.org/schemas/hep.json"
 
 
 def test_get_arxiv_categories_arxiv_id(

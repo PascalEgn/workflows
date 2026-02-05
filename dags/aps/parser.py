@@ -1,17 +1,16 @@
+import logging
 import re
 
 from common.parsing.json_extractors import CustomExtractor, NestedValueExtractor
 from common.parsing.parser import IParser
 from common.utils import construct_license
 from inspire_utils.record import get_value
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 class APSParser(IParser):
     def __init__(self) -> None:
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         article_type_mapping = {
             "article": "article",
             "erratum": "erratum",
@@ -158,4 +157,4 @@ class APSParser(IParser):
                 )
             return licenses
         except Exception:
-            self.logger.error("Error was raised while parsing licenses.")
+            logger.error("Error was raised while parsing licenses.")

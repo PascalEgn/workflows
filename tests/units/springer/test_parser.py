@@ -1,20 +1,19 @@
 import xml.etree.ElementTree as ET
 from os import listdir
 
+import pytest
 from common.enhancer import Enhancer
-from pytest import fixture
 from springer.parser import SpringerParser
 from springer.springer_process_file import process_xml
 
 
-@fixture(scope="module")
+@pytest.fixture(scope="module")
 def parser():
     return SpringerParser()
 
 
-@fixture
+@pytest.fixture
 def articles(datadir):
-
     articles = []
     for filename in sorted(listdir(datadir)):
         with open(datadir / filename) as file:
@@ -23,7 +22,7 @@ def articles(datadir):
     return articles
 
 
-@fixture()
+@pytest.fixture
 def parsed_articles(parser, articles):
     return [parser._publisher_specific_parsing(article) for article in articles]
 
@@ -42,9 +41,7 @@ def test_equation_and_italic_removal():
         """,
             """
             <ArticleTitle Language="En" OutputMedium="All"> Measurement of the inclusive branching fractions for $${B}_{s}^{0}$$ decays into $\\textit{D}$ mesons via hadronic tagging </ArticleTitle>
-        """.replace(
-                "\n", ""
-            ).strip(),
+        """.replace("\n", "").strip(),
         ),
         (
             """
@@ -58,9 +55,7 @@ def test_equation_and_italic_removal():
         """,
             """
             <ArticleTitle Language="En" OutputMedium="All"> Measurement of the inclusive branching fractions for $${B}_{s}^{0}$$ decays into $\\textit{D}$ mesons via hadronic tagging </ArticleTitle>
-        """.replace(
-                "\n", ""
-            ).strip(),
+        """.replace("\n", "").strip(),
         ),
     ]
 
@@ -189,7 +184,7 @@ def test_authors(parsed_articles):
         ],
     )
 
-    for authors, parsed_article in zip(expected_results, parsed_articles):
+    for authors, parsed_article in zip(expected_results, parsed_articles, strict=False):
         assert authors == parsed_article["authors"]
 
         for author in authors:
@@ -207,14 +202,14 @@ def test_title(parsed_articles):
         "A strategy for a general search for new phenomena using data-derived signal regions and its "
         "application within the ATLAS experiment",
     )
-    for title, article in zip(titles, parsed_articles):
+    for title, article in zip(titles, parsed_articles, strict=False):
         assert "title" in article
         assert article["title"] == title
 
 
 def test_date_published(parsed_articles):
     dates_published = ("2019-01-28", "2019-01-29", "2019-02-06")
-    for date_published, article in zip(dates_published, parsed_articles):
+    for date_published, article in zip(dates_published, parsed_articles, strict=False):
         assert "date_published" in article
         assert article["date_published"] == date_published
 
@@ -240,7 +235,9 @@ def test_license(parsed_articles):
             }
         ],
     )
-    for expected_license, article in zip(expected_licenses, parsed_articles):
+    for expected_license, article in zip(
+        expected_licenses, parsed_articles, strict=False
+    ):
         assert "license" in article
         assert article["license"] == expected_license
 
@@ -251,7 +248,7 @@ def test_dois(parsed_articles):
         "10.1140/epjc/s10052-019-6572-3",
         "10.1140/epjc/s10052-019-6540-y",
     )
-    for doi, article in zip(dois, parsed_articles):
+    for doi, article in zip(dois, parsed_articles, strict=False):
         assert "dois" in article
         assert article["dois"] == [doi]
 
@@ -262,7 +259,7 @@ def test_collections(parsed_articles):
         ["European Physical Journal C"],
         ["European Physical Journal C"],
     )
-    for collection, article in zip(collections, parsed_articles):
+    for collection, article in zip(collections, parsed_articles, strict=False):
         assert "collections" in article
         for coll in collection:
             assert coll in article["collections"]
@@ -270,7 +267,7 @@ def test_collections(parsed_articles):
 
 def test_collaborations(parsed_articles):
     collaborations = ([], [], ["ATLAS Collaboration"])
-    for collaboration, article in zip(collaborations, parsed_articles):
+    for collaboration, article in zip(collaborations, parsed_articles, strict=False):
         if collaboration:
             assert "collaborations" in article
             assert article["collaborations"] == collaboration
@@ -308,7 +305,7 @@ def test_publication_info(parsed_articles):
             journal_artid="s10052-019-6540-y",
         ),
     )
-    for expected, article in zip(expected_results, parsed_articles):
+    for expected, article in zip(expected_results, parsed_articles, strict=False):
         for k, v in expected.items():
             assert k in article
             assert article[k] == v
@@ -316,7 +313,7 @@ def test_publication_info(parsed_articles):
 
 def test_page_nr(parsed_articles):
     expected_results = ([29], [25], [45])
-    for expected, article in zip(expected_results, parsed_articles):
+    for expected, article in zip(expected_results, parsed_articles, strict=False):
         assert "page_nr" in article
         assert article["page_nr"] == expected
 
@@ -330,7 +327,7 @@ def test_copyrights(parsed_articles):
             "copyright_year": 2019,
         },
     )
-    for expected, article in zip(expected_results, parsed_articles):
+    for expected, article in zip(expected_results, parsed_articles, strict=False):
         for k, v in expected.items():
             assert k in article
             assert article[k] == v
@@ -343,7 +340,7 @@ def test_arxiv(parsed_articles):
         [dict(value="1807.07447v1")],
     )
 
-    for expected, article in zip(expected_results, parsed_articles):
+    for expected, article in zip(expected_results, parsed_articles, strict=False):
         assert "arxiv_eprints" in article
         assert article["arxiv_eprints"] == expected
 
@@ -355,7 +352,7 @@ def test_doctype(parsed_articles):
         "article",
     )
 
-    for expected, article in zip(expected_results, parsed_articles):
+    for expected, article in zip(expected_results, parsed_articles, strict=False):
         assert "journal_doctype" in article
         assert article["journal_doctype"] == expected
 
@@ -429,14 +426,14 @@ def test_abstract(parsed_articles):
         "sensitivities.",
         None,
     )
-    for abstract, article in zip(abstracts, parsed_articles):
+    for abstract, article in zip(abstracts, parsed_articles, strict=False):
         if abstract is None:
             assert "abstract" not in article
         else:
             assert article["abstract"] == abstract
 
 
-@fixture
+@pytest.fixture
 def article_with_orcid(parser, datadir):
     with open(datadir / "s10052-024-12692-y.xml") as file:
         yield parser._generic_parsing(
@@ -538,7 +535,7 @@ def test_article_with_cleaned_orcid(article_with_orcid):
     assert expected_output == article_with_orcid["authors"]
 
 
-@fixture
+@pytest.fixture
 def article_with_no_affiliations(parser, datadir):
     with open(datadir / "country_issue.xml") as file:
         xml = process_xml(file.read())

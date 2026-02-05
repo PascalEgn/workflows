@@ -1,3 +1,4 @@
+import logging
 import os
 from io import BytesIO
 
@@ -5,9 +6,8 @@ from common.exceptions import UnknownFileExtension
 from common.repository import IRepository
 from common.s3_service import S3Service
 from common.utils import find_extension
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 class ElsevierRepository(IRepository):
@@ -41,7 +41,7 @@ class ElsevierRepository(IRepository):
                 extension = find_extension(last_part)
                 grouped_files[filename_without_extension][extension] = file
         except (IndexError, UnknownFileExtension):
-            self.logger.error()
+            logger.error("Unknown file extension for file %s", file)
         return list(grouped_files.values())
 
     def get_by_id(self, id):
@@ -50,7 +50,7 @@ class ElsevierRepository(IRepository):
         return retfile
 
     def save(self, filename, obj, prefix=None):
-        logger.info("Saving file.", filename=filename)
+        logger.info("Saving file. File: %s", filename)
         obj.seek(0)
         if not prefix:
             prefix = (

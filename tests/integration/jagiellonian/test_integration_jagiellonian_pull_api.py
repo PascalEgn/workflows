@@ -1,6 +1,6 @@
-import json
+import contextlib
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest import mock
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
@@ -9,7 +9,7 @@ import boto3
 import pytest
 from airflow.models import Connection, DagBag
 from airflow.utils.session import create_session
-from botocore.config import Config
+from botocore.client import Config
 
 endpoint = os.getenv("S3_ENDPOINT", "s3")
 parsed = urlparse(endpoint if "://" in endpoint else f"http://{endpoint}")
@@ -24,27 +24,13 @@ def dagbag():
 @pytest.mark.usefixtures("dagbag")
 class TestIntegrationJagiellonianPullApi:
     def setup_method(self):
-        with create_session() as session:
-            session.query(Connection).filter(
-                Connection.conn_id == "aws_s3_minio_test"
-            ).delete()
-            conn = Connection(
-                conn_id="aws_s3_minio_test",
-                conn_type="aws",
-                host=MINIO_HOST,
-                port=9000,
-                login="airflow",
-                password="Airflow01",
-                extra=json.dumps(
-                    {
-                        "endpoint_url": f"http://{MINIO_HOST}:9000",
-                        "region_name": "us-east-1",
-                        "verify": False,
-                    }
-                ),
-            )
-            session.add(conn)
+        os.environ["AIRFLOW_CONN_AWS_S3_MINIO_TEST"] = (
+            f"aws://airflow:Airflow01@{MINIO_HOST}:9000"
+            f"?endpoint_url=http%3A%2F%2F{MINIO_HOST}%3A9000"
+            "&region_name=us-east-1&verify=false"
+        )
 
+        with create_session() as session:
             session.query(Connection).filter(
                 Connection.conn_id == "crossref_api_test"
             ).delete()
@@ -58,7 +44,7 @@ class TestIntegrationJagiellonianPullApi:
             session.commit()
 
         self.dag_id = "jagiellonian_pull_api"
-        self.execution_date = datetime.now(timezone.utc)
+        self.execution_date = datetime.now(UTC)
 
         self.dag = DagBag(dag_folder="dags/", include_examples=False).get_dag(
             self.dag_id
@@ -75,7 +61,8 @@ class TestIntegrationJagiellonianPullApi:
             verify=False,
         )
 
-        s3.create_bucket(Bucket="jagiellonian-test", ACL="public-read-write")
+        with contextlib.suppress(s3.exceptions.BucketAlreadyOwnedByYou):
+            s3.create_bucket(Bucket="jagiellonian-test", ACL="public-read-write")
         response = s3.list_objects_v2(Bucket="jagiellonian-test")
 
         if "Contents" in response:
@@ -87,16 +74,8 @@ class TestIntegrationJagiellonianPullApi:
                 )
 
     def teardown_method(self):
-        with create_session() as session:
-            session.query(Connection).filter(
-                Connection.conn_id == "aws_s3_minio_test"
-            ).delete()
-
-            session.query(Connection).filter(
-                Connection.conn_id == "crossref_api_test"
-            ).delete()
-
-            session.commit()
+        if "AIRFLOW_CONN_AWS_S3_MINIO_TEST" in os.environ:
+            del os.environ["AIRFLOW_CONN_AWS_S3_MINIO_TEST"]
 
         s3 = boto3.client(
             "s3",
@@ -118,6 +97,11 @@ class TestIntegrationJagiellonianPullApi:
                 )
 
         s3.delete_bucket(Bucket="jagiellonian-test")
+        with create_session() as session:
+            session.query(Connection).filter(
+                Connection.conn_id == "crossref_api_test"
+            ).delete()
+            session.commit()
 
     @mock.patch.dict(
         os.environ,

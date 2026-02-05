@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 
+import pytest
 from common.cleanup import replace_cdata_format
 from common.constants import ARXIV_EXTRACTION_PATTERN
 from common.enhancer import Enhancer
@@ -8,10 +9,9 @@ from common.parsing.xml_extractors import RequiredFieldNotFoundExtractionError
 from common.utils import parse_element_text, parse_to_ET_element
 from iop.iop_process_file import convert_xml_to_et_tree
 from iop.parser import IOPParser
-from pytest import fixture, mark, param, raises
 
 
-@fixture
+@pytest.fixture
 def parser():
     return IOPParser()
 
@@ -26,14 +26,14 @@ def test_doi(shared_datadir, parser):
 def test_no_doi(shared_datadir, parser):
     content = (shared_datadir / "no_data.xml").read_text()
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
 def test_no_doi_in_text(shared_datadir, parser):
     content = (shared_datadir / "just_fields_no_text_data.xml").read_text()
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -116,16 +116,16 @@ def test_arxiv_eprints_value_with_version(shared_datadir, parser):
     assert parsed_article["arxiv_eprints"] == [{"value": "2108.04010"}]
 
 
-@mark.parametrize(
-    "input, expected",
+@pytest.mark.parametrize(
+    ("input", "expected"),
     [
-        param("1111.111123", "1111.111123", id="test_arxiv_value_with_digits"),
-        param(
+        pytest.param("1111.111123", "1111.111123", id="test_arxiv_value_with_digits"),
+        pytest.param(
             "1111.111wtwtwvqv1",
             "1111.111wtwtwvq",
             id="test_arxiv_value_with_digits_and_letters_and_version",
         ),
-        param(
+        pytest.param(
             "1111.111123v1",
             "1111.111123",
             id="test_arxiv_value_with_digits_and_version",
@@ -189,7 +189,7 @@ def test_convert_string():
     fail_string = '<p>As mentioned before, we say that an operator is conserved if its expectation value is independent of time. This means that an equal-time operator <italic toggle="yes">A</italic> is conserved if and only if it satisfies <italic toggle="yes"/>d<italic toggle="yes">A</italic>=0. Thus, we have a tool allowing us to identify the conserved operators without resorting to Noether\'s theorem.</p>'
 
     parsed_article = convert_xml_to_et_tree(fail_string)
-    assert parsed_article
+    assert parsed_article is not None
 
 
 def test_authors_faulty_xml(shared_datadir, parser):
@@ -615,7 +615,7 @@ def test_authors(shared_datadir, parser):
 def test_no_authors(shared_datadir, parser):
     content = (shared_datadir / "no_authors.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -657,7 +657,7 @@ def test_abstract(shared_datadir, parser):
 def test_no_abstract(shared_datadir, parser):
     content = (shared_datadir / "no_abstract.xml").read_text()
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -680,7 +680,7 @@ def test_no_day_published(shared_datadir, parser):
 def test_no_year_published(shared_datadir, parser):
     content = (shared_datadir / "no_year_published.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -722,7 +722,7 @@ def test_no_authors_country(shared_datadir, parser):
 def test_no_authors_and_institutions_country(shared_datadir, parser):
     content = (shared_datadir / "no_authors_and_institutions_country.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -730,53 +730,56 @@ def test_authors_with_missing_fields(shared_datadir, parser):
     content = (shared_datadir / "authors_with_missing_fields.xml").read_text()
     article = ET.fromstring(content)
     parsed_article = parser._publisher_specific_parsing(article)
-    assert parsed_article["authors"] == [
-        {
-            "surname": "Zhao",
-            "given_names": "林",  # the author misses given_names, so it's taken from name-style="eastern"
-            "affiliations": [
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-            ],
-        },
-        {
-            "surname": "Test1",  # the author misses given_names
-            "affiliations": [
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-            ],
-        },
-        {
-            "affiliations": [  # the author misses given_names and name
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-                {
-                    "country": "China",
-                    "organization": "Department of Engineering Physics, Tsinghua University",
-                    "value": "Department of Engineering Physics, Tsinghua University, China",
-                },
-            ]
-        },
-    ]
+    assert (
+        parsed_article["authors"]
+        == [
+            {
+                "surname": "Zhao",
+                "given_names": "林",  # the author misses given_names, so it's taken from name-style="eastern"
+                "affiliations": [
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                ],
+            },
+            {
+                "surname": "Test1",  # the author misses given_names
+                "affiliations": [
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                ],
+            },
+            {
+                "affiliations": [  # the author misses given_names and name
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                    {
+                        "country": "China",
+                        "organization": "Department of Engineering Physics, Tsinghua University",
+                        "value": "Department of Engineering Physics, Tsinghua University, China",
+                    },
+                ]
+            },
+        ]
+    )
 
 
 def test_copyright(shared_datadir, parser):
@@ -838,7 +841,7 @@ def test_publication_info(shared_datadir, parser):
 def test_publication_info_just_journal_title_year(shared_datadir, parser):
     content = (shared_datadir / "just_journal_year.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -854,14 +857,14 @@ def test_licenses(shared_datadir, parser):
 def test_no_licenses_and_no_statements(shared_datadir, parser):
     content = (shared_datadir / "no_license_and_no_statement_no_url.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
 def test_no_abstract_value(shared_datadir, parser):
     content = (shared_datadir / "no_abstract_value.xml").read_text()
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -870,14 +873,14 @@ def test_publication_info_fields_values_just_year(shared_datadir, parser):
         shared_datadir / "no_journal_tiltle_volume_issue_artid_values.xml"
     ).read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
 def test_no_license_url(shared_datadir, parser):
     content = (shared_datadir / "no_license_url.xml").read_text()
     article = ET.fromstring(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -929,7 +932,7 @@ def test_subtitle(shared_datadir, parser):
 def test_no_title(shared_datadir, parser):
     content = (shared_datadir / "no_title.xml").read_text()
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -944,7 +947,7 @@ def test_no_title_no_subtitle_values(shared_datadir, parser):
     content = (shared_datadir / "no_title_no_subtitle_values.xml").read_text()
     article = ET.fromstring(content)
     article = parse_to_ET_element(content)
-    with raises(RequiredFieldNotFoundExtractionError):
+    with pytest.raises(RequiredFieldNotFoundExtractionError):
         parser._publisher_specific_parsing(article)
 
 
@@ -960,7 +963,7 @@ def test_no_licenses_statement(shared_datadir, parser):
 def test_unknown_license_in_license_URL(shared_datadir, parser):
     content = (shared_datadir / "unknown_license_in_license_URL.xml").read_text()
     article = ET.fromstring(content)
-    with raises(UnknownLicense):
+    with pytest.raises(UnknownLicense):
         parser._publisher_specific_parsing(article)
 
 

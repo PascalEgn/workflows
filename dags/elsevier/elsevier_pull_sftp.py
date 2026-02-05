@@ -1,17 +1,24 @@
+import logging
+
 import pendulum
-from airflow.decorators import dag, task
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.sdk import dag, task
 from common.pull_ftp import migrate_from_ftp as migrate_from_ftp_common
 from common.pull_ftp import reprocess_files
 from elsevier.repository import ElsevierRepository
 from elsevier.sftp_service import ElsevierSFTPService
 from elsevier.trigger_file_processing import trigger_file_processing_elsevier
-from executor_config import kubernetes_executor_config
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
+
+ELSEVIER_REPO = ElsevierRepository()
+ELSEVIER_SFTP = ElsevierSFTPService()
 
 
 @dag(
     start_date=pendulum.today("UTC").add(days=-1),
-    schedule="30 */3 * * *",
+    schedule="5 */6 * * *",
+    tags=["pull", "elsevier"],
     params={
         "excluded_directories": [],
         "force_pull": False,
@@ -19,12 +26,8 @@ from structlog import get_logger
     },
 )
 def elsevier_pull_sftp():
-    logger = get_logger().bind(class_name="elsevier_pull_sftp")
-
-    @task(executor_config=kubernetes_executor_config)
-    def migrate_from_ftp(
-        sftp=ElsevierSFTPService(), repo=ElsevierRepository(), **kwargs
-    ):
+    @task()
+    def migrate_from_ftp(sftp=ELSEVIER_SFTP, repo=ELSEVIER_REPO, **kwargs):
         params = kwargs["params"]
         specific_files = (
             "filenames_pull" in params
@@ -40,9 +43,9 @@ def elsevier_pull_sftp():
                 sftp, repo, logger, publisher="elsevier", **kwargs
             )
 
-    @task(executor_config=kubernetes_executor_config)
-    def trigger_file_processing(
-        repo=ElsevierRepository(),
+    @task()
+    def prepare_trigger_conf(
+        repo=ELSEVIER_REPO,
         filenames=None,
     ):
         return trigger_file_processing_elsevier(
@@ -50,7 +53,13 @@ def elsevier_pull_sftp():
         )
 
     archive_names = migrate_from_ftp()
-    trigger_file_processing(filenames=archive_names)
+    trigger_confs = prepare_trigger_conf(filenames=archive_names)
+
+    TriggerDagRunOperator.partial(
+        task_id="elsevier_trigger_file_processing",
+        trigger_dag_id="elsevier_process_file",
+        reset_dag_run=True,
+    ).expand(conf=trigger_confs)
 
 
 dag_taskflow = elsevier_pull_sftp()

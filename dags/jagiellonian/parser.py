@@ -1,17 +1,16 @@
+import logging
 import re
 
 import requests
 from common.parsing.json_extractors import CustomExtractor, NestedValueExtractor
 from common.parsing.parser import IParser
 from common.utils import construct_license
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 
 
 class JagiellonianParser(IParser):
     def __init__(self) -> None:
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self._ror_cache = {}
         article_type_mapping = {
             "journal-article": "article",
@@ -138,7 +137,7 @@ class JagiellonianParser(IParser):
                     if preprint.get("id-type") == "arxiv":
                         return [{"value": preprint.get("id")}]
         except Exception:
-            self.logger.error("Error extracting arXiv ID")
+            logger.error("Error extracting arXiv ID")
         return []
 
     def _get_journal_year(self, article):
@@ -149,7 +148,7 @@ class JagiellonianParser(IParser):
             elif "issued" in article and "date-parts" in article["issued"]:
                 return int(article["issued"]["date-parts"][0][0])
         except (IndexError, TypeError, ValueError):
-            self.logger.error("Error extracting journal year")
+            logger.error("Error extracting journal year")
         return 0
 
     def _get_date_published(self, article):
@@ -175,7 +174,7 @@ class JagiellonianParser(IParser):
                 elif len(date_parts) >= 1:
                     return f"{date_parts[0]:04d}-01-01"
         except (IndexError, TypeError):
-            self.logger.error("Error extracting publication date")
+            logger.error("Error extracting publication date")
         return ""
 
     def _get_acceptance_date(self, article):
@@ -192,7 +191,7 @@ class JagiellonianParser(IParser):
                 elif len(date_parts) >= 1:
                     return f"{date_parts[0]:04d}-01-01"
         except (IndexError, TypeError):
-            self.logger.error("Error extracting acceptance date")
+            logger.error("Error extracting acceptance date")
         return ""
 
     def _get_reception_date(self, article):
@@ -203,7 +202,7 @@ class JagiellonianParser(IParser):
                     if assertion.get("name") == "date_received":
                         return assertion.get("value", "")
         except Exception:
-            self.logger.error("Error extracting reception date")
+            logger.error("Error extracting reception date")
         return ""
 
     def _form_authors(self, article):
@@ -261,7 +260,7 @@ class JagiellonianParser(IParser):
                         )
                     self._ror_cache[ror_id] = country
                 except Exception:
-                    self.logger.error(f"Error fetching country for ROR {ror_id}")
+                    logger.error("Error fetching country for ROR: %s", ror_id)
         return org_name, ror_id, country
 
     def _get_affiliations(self, author):
@@ -311,7 +310,7 @@ class JagiellonianParser(IParser):
                     if assertion.get("name") == "copyright_holder":
                         return assertion.get("value", "")
         except Exception:
-            self.logger.error("Error extracting copyright holder")
+            logger.error("Error extracting copyright holder")
         return ""
 
     def _get_copyright_year(self, article):
@@ -321,7 +320,7 @@ class JagiellonianParser(IParser):
                     if assertion.get("name") == "copyright_year":
                         return int(assertion.get("value", 0))
         except (ValueError, TypeError):
-            self.logger.error("Error extracting copyright year")
+            logger.error("Error extracting copyright year")
         return None
 
     def _get_copyright_statement(self, article):
@@ -331,7 +330,7 @@ class JagiellonianParser(IParser):
                     if assertion.get("name") == "copyright_statement":
                         return assertion.get("value", "")
         except Exception:
-            self.logger.error("Error extracting copyright statement")
+            logger.error("Error extracting copyright statement")
         return ""
 
     def _get_licenses(self, article):
@@ -366,7 +365,7 @@ class JagiellonianParser(IParser):
                                 )
                 return licenses
         except Exception as e:
-            self.logger.error(f"Error extracting license: {e}")
+            logger.error("Error extracting license: %s", e)
         return []
 
     def _get_files(self, article):
@@ -394,5 +393,5 @@ class JagiellonianParser(IParser):
 
             return files
         except Exception as e:
-            self.logger.error(f"Error extracting file links: {e}")
+            logger.error("Error extracting file links: %s", e)
             return {}

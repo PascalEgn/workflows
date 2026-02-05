@@ -4,11 +4,13 @@ import backoff
 import requests
 from furl import furl
 
+logger = logging.getLogger("airflow.task")
+
 
 class Request:
     def __init__(
         self,
-        base_url="localhost",
+        base_url="airflow-apiserver",
         port=8080,
         parameters=None,
         headers=None,
@@ -38,7 +40,7 @@ class Request:
         url_base_obj = furl(self.base_url)
         url_base_obj.path.segments = self.path_segments
         url_base_obj.add(self.parameters)
-        logging.debug(url_base_obj.url)
+        logger.debug(url_base_obj.url)
         response = requests.get(url_base_obj.url, headers=self.headers)
         response.raise_for_status()
         return response

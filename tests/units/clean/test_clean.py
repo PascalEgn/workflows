@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from airflow.models import DagBag
@@ -16,24 +16,23 @@ def dag():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 1
+    assert len(dag.tasks) == 2
 
 
 @freeze_time("2023-09-20")
 @pytest.fixture
 def old_temp_dir(tmpdir, tmp_path):
-    logs_date = datetime.utcnow().astimezone(timezone.utc)
+    logs_date = datetime.utcnow().astimezone(UTC)
     log_path = tmpdir.join(
-        f'logs/dag_id=test/run_id=test__{logs_date.strftime("%Y-%m-%dT%H:%M:%S.%f%z")}/task_id=test_task/attempt=1.log'
+        f"logs/dag_id=test/run_id=test__{logs_date.strftime('%Y-%m-%dT%H:%M:%S.%f%z')}/task_id=test_task/attempt=1.log"
     )
     log_path.dirpath().ensure_dir()
-    yield log_path
+    return log_path
 
 
 @pytest.mark.xfail(reason="Expected failure due to known issue with cleanup logic")
 @freeze_time("2023-09-20")
 def test_clean_up_command(dag, old_temp_dir, monkeypatch):
     monkeypatch.setenv("AIRFLOW_HOME", old_temp_dir)
-    dag.clear()
     dag.test()
     assert not os.path.exists(old_temp_dir)

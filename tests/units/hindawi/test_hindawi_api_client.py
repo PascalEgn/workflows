@@ -1,15 +1,15 @@
+import pytest
 from hindawi.hindawi_api_client import HindawiApiClient
 from hindawi.hindawi_params import HindawiParams
-from pytest import fixture, mark, raises
 
 
-@fixture
+@pytest.fixture
 def pdf_file(shared_datadir):
     with open(shared_datadir / "3902819.pdf", "rb") as file:
         return file.read()
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_api_client_get_metadata():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -20,7 +20,7 @@ def test_hindawi_api_client_get_metadata():
     assert articles_metadata is not None
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_api_client_get_not_existent_metadata():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -33,15 +33,15 @@ def test_hindawi_api_client_get_not_existent_metadata():
 
 def test_hindawi_api_client_get_metadata_without_dates():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
-    with raises(AttributeError, match=r"until date is required"):
-        parameters = HindawiParams(
-            from_date="",
-            until_date="",
-        ).get_params()
+    parameters = HindawiParams(
+        from_date="",
+        until_date="",
+    ).get_params()
+    with pytest.raises(AttributeError, match=r"until date is required"):
         rest_api.get_articles_metadata(parameters)
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_api_client_get_metadata_without_from_date():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -52,7 +52,7 @@ def test_hindawi_api_client_get_metadata_without_from_date():
     assert articles_metadata is not None
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_api_client_get_metadata_with_wrong_dates():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -63,7 +63,7 @@ def test_hindawi_api_client_get_metadata_with_wrong_dates():
     assert articles_metadata is None
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_get_file(pdf_file):
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -74,7 +74,7 @@ def test_hindawi_get_file(pdf_file):
     assert file == pdf_file
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_get_file_with_wrong_DOI():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(
@@ -91,13 +91,15 @@ def test_hindawi_get_file_without_extension():
         from_date="2022-01-01",
         until_date="2022-01-10",
     ).get_params()
-    with raises(AttributeError, match=r"The extension has to be pdf, pdfa or xml"):
+    with pytest.raises(
+        AttributeError, match=r"The extension has to be pdf, pdfa or xml"
+    ):
         rest_api.get_file(
             parameters, "not_existent_extension", doi="10.1155/2019/3902819"
         )
 
 
-@mark.vcr
+@pytest.mark.vcr
 def test_hindawi_get_one_record():
     rest_api = HindawiApiClient(base_url="https://www.hindawi.com")
     parameters = HindawiParams(record="10.1155/2022/8009789").get_params()

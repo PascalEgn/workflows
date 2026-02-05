@@ -39,20 +39,20 @@ class MockedAPSApiClient:
         }
 
 
-def test_set_APS_harvesting_interval(repo=MockedRepo()):
+def test_set_APS_harvesting_interval():
     today = date.today().strftime("%Y-%m-%d")
     expected_days = {
         "from_date": today,
         "until_date": today,
     }
-    dates = set_harvesting_interval(repo)
+    dates = set_harvesting_interval(MockedRepo())
     assert dates == expected_days
 
 
 def test_save_file_in_s3():
     today = date.today()
     repo = MockedRepo()
-    expected_key = f'{today}/{ datetime.now().strftime("%Y-%m-%dT%H:%M")}.json'
+    expected_key = f"{today}/{datetime.now().strftime('%Y-%m-%dT%H:%M')}.json"
     data = str.encode('{"data": ["abstracts": "abstract value"]}')
     key = save_file_in_s3(data, repo)
     assert key == expected_key
@@ -61,6 +61,10 @@ def test_save_file_in_s3():
 @freeze_time("2023-12-04 10:00")
 def test_split_json():
     ids_and_articles = split_json(repo=MockedRepo(), key="key/key")
-    expected_id = "APS__2023-12-04T10:00:00.000000+0000"
-    assert ids_and_articles[0]["id"] == expected_id
+    assert "article" in ids_and_articles[0]
     assert len(ids_and_articles) == 1
+    assert "identifiers" in ids_and_articles[0]["article"]
+    assert (
+        ids_and_articles[0]["article"]["identifiers"]["doi"]
+        == "10.1103/PhysRevLett.126.153601"
+    )

@@ -1,3 +1,5 @@
+import logging
+
 from common.parsing.parser import IParser
 from common.parsing.xml_extractors import (
     AttributeExtractor,
@@ -5,14 +7,14 @@ from common.parsing.xml_extractors import (
     TextExtractor,
 )
 from common.utils import extract_text
-from structlog import get_logger
+
+logger = logging.getLogger("airflow.task")
 
 
 class ElsevierParser(IParser):
     def __init__(self):
         self.dois = None
         self.year = None
-        self.logger = get_logger().bind(class_name=type(self).__name__)
         self.article_type_mapping = {
             "article": "article",
             "sco": "article",
@@ -115,7 +117,7 @@ class ElsevierParser(IParser):
             return
         dois = node.text
         if dois:
-            self.logger.msg("Parsing dois for article", dois=dois)
+            logger.info("Parsing dois for article. Dois: %s", dois)
             self.dois = dois
             return [dois]
         return
@@ -175,7 +177,7 @@ class ElsevierParser(IParser):
             authors.append(auth_dict)
 
         if not authors:
-            self.logger.error("No authors found for article %s." % self.dois)
+            logger.error("No authors found for article. Article: %s", self.dois)
         return authors
 
     def _get_affiliations(self, ref_ids, author):
@@ -189,7 +191,9 @@ class ElsevierParser(IParser):
                 self._get_affiliation(article=affiliation, affiliations=affiliations)
         return affiliations
 
-    def _get_affiliation(self, article, ref_id="", affiliations=[]):
+    def _get_affiliation(self, article, ref_id="", affiliations=None):
+        if affiliations is None:
+            affiliations = []
         ref_id_value = f"affiliation/[@id='{ref_id}']/" if ref_id else ""
         affiliation_value = extract_text(
             article=article,
@@ -237,14 +241,16 @@ class ElsevierParser(IParser):
         node = article.find(".")
         value = node.get("docsubtype")
         if not value:
-            self.logger.error("Article-type is not found in XML", dois=self.dois)
+            logger.error("Article-type is not found in XML. Article: %s", self.dois)
             return None
         try:
             self.journal_doctype = self.article_type_mapping[value]
             return self.journal_doctype
         except KeyError:
-            self.logger.error(
-                "Unmapped article type", dois=self.dois, article_type=value
+            logger.error(
+                "Unmapped article type %s for article %s",
+                value,
+                self.dois,
             )
         except Exception:
-            self.logger.error("Unknown error", dois=self.dois)
+            logger.error("Unknown error for article %s", self.dois)

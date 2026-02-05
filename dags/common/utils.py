@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import re
 import tarfile
@@ -29,9 +30,8 @@ from common.exceptions import (
     UnknownLicense,
 )
 from inspire_utils.record import get_value
-from structlog import get_logger
 
-logger = get_logger()
+logger = logging.getLogger("airflow.task")
 cc = coco.CountryConverter()
 
 
@@ -79,14 +79,14 @@ def parse_to_int(value):
     try:
         return int(value)
     except (ValueError, TypeError):
-        logger.error("Cannot parse to integer", value=value)
+        logger.error("Cannot parse to integer. Value: %s", value)
 
 
 def extract_text(article, path, field_name, dois):
     try:
         return article.find(path).text
     except AttributeError:
-        logger.error(f"{field_name} is not found in XML", dois=dois)
+        logger.error("%s is not found in XML. DOIs: %s", field_name, dois)
         return
 
 
@@ -133,9 +133,7 @@ def construct_license(license_type, version, url=None):
     if license_type and version:
         logger.error("License URL is not found in XML.")
         return {"license": f"{license_type}-{version}"}
-    logger.error(
-        "License is not given, or missing arguments.",
-    )
+    logger.error("License is not given, or missing arguments.")
 
 
 def get_license_type(license_text):
@@ -149,7 +147,7 @@ def get_license_type(license_text):
 def get_license_type_and_version_from_url(url):
     match = LICENSE_PATTERN.search(url)
     if not match:
-        logger.error("No license found in URL")
+        logger.error("No license found in URL. URL: %s", url)
         return None
     first_part_of_license_type = ""
     version = match.group(2)
@@ -191,7 +189,7 @@ def remove_xml_namespaces(xml_content_bytes):
 
 def parse_without_names_spaces(xml):
     try:
-        if type(xml) == str:
+        if isinstance(xml, str):
             it = ET.iterparse(StringIO(xml))
         else:
             it = ET.iterparse(xml, events=("start", "end"))
@@ -202,7 +200,7 @@ def parse_without_names_spaces(xml):
         if isinstance(xml, io.BytesIO):
             xml = xml.getvalue().decode("utf-8")
         xml = remove_xml_namespaces(xml)
-        if type(xml) == str:
+        if isinstance(xml, str):
             it = ET.iterparse(StringIO(xml))
         else:
             it = ET.iterparse(StringIO(xml.getvalue().decode("utf-8")))
@@ -213,16 +211,19 @@ def parse_without_names_spaces(xml):
 
 
 def get_text_value(element):
-    if element is not None:
-        if element.text:
-            return clean_text(element.text)
+    if element is not None and element.text:
+        return clean_text(element.text)
 
 
 def clean_text(text):
     return " ".join(text.split())
 
 
-def check_dagrun_state(dagrun: DagRun, not_allowed_states=[], allowed_states=[]):
+def check_dagrun_state(dagrun: DagRun, not_allowed_states=None, allowed_states=None):
+    if allowed_states is None:
+        allowed_states = []
+    if not_allowed_states is None:
+        not_allowed_states = []
     dag_run_states = {
         "queued": DagRunState.QUEUED,
         "running": DagRunState.RUNNING,
@@ -302,7 +303,7 @@ def parse_element_text(item):
     max_tries=5,
 )
 def create_or_update_article(data):
-    logger.info("Sending data to the backend", data=data)
+    logger.info("Sending data to the backend. Data: %s", data)
     backend_url = os.getenv(
         "BACKEND_URL", "http://localhost:8000/api/article-workflow-import/"
     )
@@ -317,17 +318,19 @@ def create_or_update_article(data):
         response.raise_for_status()
         return response.json()
     except requests.HTTPError:
-        logger.error(response.content)
+        logger.error(
+            "Failed to send data to the backend. Response: %s", response.content
+        )
         raise
 
 
 def parse_country_from_value(affiliation_value):
     for key, val in INSTITUTIONS_AND_COUNTRIES_MAPPING.items():
-        if re.search(r"\b%s\b" % key, affiliation_value, flags=re.IGNORECASE):
+        if re.search(rf"\b{key}\b", affiliation_value, flags=re.IGNORECASE):
             return val
     country = affiliation_value.split(",")[-1].strip()
     for key, val in COUNTRIES_DEFAULT_MAPPING.items():
-        if re.search(r"\b%s\b" % key, country, flags=re.IGNORECASE):
+        if re.search(rf"\b{key}\b", country, flags=re.IGNORECASE):
             return val
 
     try:
@@ -350,7 +353,7 @@ def parse_country_from_value(affiliation_value):
 
 def find_country_match_from_mapping(affiliation_value):
     for key in COUNTRIES_DEFAULT_MAPPING:
-        if re.search(r"\b%s\b" % key, affiliation_value, flags=re.IGNORECASE):
+        if re.search(rf"\b{key}\b", affiliation_value, flags=re.IGNORECASE):
             return COUNTRIES_DEFAULT_MAPPING[key]
 
 
