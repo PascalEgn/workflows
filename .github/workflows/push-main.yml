@@ -27,9 +27,11 @@ jobs:
     outputs:
       airflow: ${{ steps.filter.outputs.airflow }}
     steps:
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v6.0.2
+      - uses: dorny/paths-filter@v3.0.2
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             airflow:
               - 'base-images/airflow/**'
