@@ -35,7 +35,7 @@ jobs:
     outputs:
       image-id: ${{ steps.build.outputs.image-id }}
     steps:
-      - uses: cern-sis/gh-workflows/.github/actions/docker-build@v6.5.0
+      - uses: cern-sis/gh-workflows/.github/actions/docker-build@v6.5
         id: build
         with:
           image: ${{ inputs.image }}
