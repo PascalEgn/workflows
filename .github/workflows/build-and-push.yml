@@ -6,7 +6,6 @@ on:
         description: The reference to build
         type: string
         required: true
-
       image:
         description: The image to build
         type: string

@@ -17,7 +17,7 @@ jobs:
       ref: ${{ github.ref }}
       image: cern-sis/scoap3/workflows-prod
       dockerfile: base-images/airflow/Dockerfile-prod
-      build-args: |
+      build_args: |
         BASE_IMAGE_TAG=${{ inputs.image-tag }}
     secrets: inherit
 
