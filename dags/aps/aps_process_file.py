@@ -2,7 +2,7 @@ import json
 import logging
 
 import pendulum
-from airflow.sdk import dag, task
+from airflow.sdk import Param, dag, get_current_context, task
 from aps.parser import APSParser, APSXMLParser
 from aps.repository import APSRepository
 from common.enhancer import Enhancer
@@ -29,7 +29,13 @@ def enrich_aps(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-def replace_authors_with_xml_authors(parsed_json, parsed_xml):
+def replace_authors_with_xml_authors(
+    parsed_json, parsed_xml, fail_if_author_count_not_equal=True
+):
+    if fail_if_author_count_not_equal and len(parsed_json["authors"]) != len(
+        parsed_xml["authors"]
+    ):
+        raise ValueError("Number of authors in JSON and XML do not match")
     parsed_json["authors"] = parsed_xml["authors"]
     return parsed_json
 
@@ -38,6 +44,9 @@ def replace_authors_with_xml_authors(parsed_json, parsed_xml):
     schedule=None,
     start_date=pendulum.today("UTC").add(days=-1),
     tags=["process", "aps"],
+    params={
+        "fail_if_author_count_not_equal": Param(True, type=bool),
+    },
 )
 def aps_process_file():
     s3_client = APSRepository()
@@ -86,7 +95,14 @@ def aps_process_file():
 
     @task()
     def replace_authors_with_xml_authors(parsed_json, parsed_xml):
-        return replace_authors_with_xml_authors(parsed_json, parsed_xml)
+        ctx = get_current_context()
+        return replace_authors_with_xml_authors(
+            parsed_json,
+            parsed_xml,
+            fail_if_author_count_not_equal=ctx["params"][
+                "fail_if_author_count_not_equal"
+            ],
+        )
 
     @task()
     def save_to_s3(complete_file):

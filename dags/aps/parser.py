@@ -178,9 +178,8 @@ class APSXMLParser(IParser):
             return affiliations
 
         for xref in xref_elements:
-            ref_id = xref.get("rid")
-
-            if ref_id:
+            ref_ids = list(xref.get("rid").split(" "))
+            for ref_id in ref_ids:
                 affiliation_node = article.find(f".//aff[@id='{ref_id}']")
 
                 if affiliation_node is not None:

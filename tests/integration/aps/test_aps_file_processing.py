@@ -51,7 +51,7 @@ def populated_file(enhanced_article, aps_api_client_fixture):
     if "dois" not in enhanced_article:
         return enhanced_article
 
-    doi = "10.1103/PhysRevLett.126.153601"
+    doi = "10.1103/ycxy-lwqd"
 
     pdf = aps_api_client_fixture.get_pdf_file(doi=doi)
     xml = aps_api_client_fixture.get_xml_file(doi=doi)

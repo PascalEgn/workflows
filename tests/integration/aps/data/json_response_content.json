@@ -1,294 +1,182 @@
 {
   "data": [
     {
-      "abstract": {
-        "value": "<p>We propose and theoretically analyze the use of coherent population trapping of a single diamond nitrogen-vacancy (NV) center for continuous real-time sensing. The formation of the dark state in coherent population trapping prevents optical emissions from the NV center. Fluctuating magnetic fields, however, can kick the NV center out of the dark state, leading to a sequence of single-photon emissions. A time series of the photon counts detected can be used for magnetic field estimations, even when the average photon count per update time interval is much smaller than 1. For a theoretical demonstration, the nuclear spin bath in a diamond lattice is used as a model fluctuating magnetic environment. For fluctuations with known statistical properties, such as an Ornstein-Uhlenbeck process, Bayesian inference-based estimators can lead to an estimation variance that approaches the classical Cramer-Rao lower bound and can update dynamical information in real time with the detection of just a single photon. Real-time sensing using coherent population trapping adds a powerful tool to the emerging technology of quantum sensing.</p>",
-        "format": "html"
-      },
-      "articleType": "article",
-      "authors": [
-        {
-          "type": "Person",
-          "name": "Shu-Hao Wu",
-          "firstname": "Shu-Hao",
-          "surname": "Wu",
-          "affiliationIds": ["a1", "a1"]
-        },
-        {
-          "type": "Person",
-          "name": "Ethan Turner",
-          "firstname": "Ethan",
-          "surname": "Turner",
-          "affiliationIds": ["a1", "a1"]
-        },
-        {
-          "type": "Person",
-          "name": "Hailin Wang",
-          "firstname": "Hailin",
-          "surname": "Wang",
-          "affiliationIds": ["a1", "a1"]
-        },
-        {
-          "type": "Person",
-          "name": "Tim R. Borel",
-          "firstname": "Tim R.",
-          "surname": "Borel",
-          "affiliationIds": ["a2"]
-        }
-      ],
-      "affiliations": [
-        {
-          "name": "Department of Physics and Astronomy, <a href=\"https://ror.org/02vm5rt34\">Vanderbilt University</a>, Nashville, Tennessee 37240, USA",
-          "id": "a1"
-        },
-        {
-          "name": "Department of Physics and Astronomy, <a href=\"https://ror.org/02vm5rt34\">Vanderbilt University</a>, Nashville, Tennessee 37240, USA",
-          "id": "a2"
-        }
-      ],
-      "date": "2021-04-12",
-      "fundings": [
-        {
-          "funderId": "http://dx.doi.org/10.13039/100000183",
-          "funderName": "Army Research Office",
-          "awards": ["W911NF-18-1-0218"]
-        }
-      ],
-      "type": "article",
-      "metadata_last_modified_at": "2021-04-12T14:02:31+0000",
-      "last_modified_at": "2021-04-12T14:02:31+0000",
-      "id": "10.1103/PhysRevA.103.042607",
-      "identifiers": {
-        "doi": "10.1103/PhysRevA.103.042607",
-        "arxiv": "arXiv:2102.07212"
-      },
-      "issue": {
-        "number": "4"
-      },
-      "pageStart": "042607",
-      "hasArticleId": true,
-      "numPages": 10,
-      "classificationSchemes": {
-        "physh": {
-          "concepts": [
-            {
-              "id": "65920eff-f184-41cd-9ec0-b33bb0679565",
-              "facet": {
-                "id": "f45b3c40-959c-4e90-ba0e-38232980802a"
-              },
-              "primary": false
-            },
-            {
-              "id": "2c0e953d-44fd-4611-bfb0-3e39cfb9374a",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": false
-            },
-            {
-              "id": "1fa8daba-8a48-4d9f-ada9-03a9d3259ca3",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": false
-            },
-            {
-              "id": "9b6aaf50-04bd-4aaa-b4c3-d6fa9b7f7303",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": true
-            },
-            {
-              "id": "632f74d1-d16b-4b92-a295-b24729a93d8d",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": false
-            }
-          ],
-          "disciplines": [
-            "510fc218-8774-4547-ab09-fc6cef0c9a03",
-            "8ab3d2b7-b50b-460e-b086-8990cfcbd350",
-            "a48f173e-6459-4642-a711-a6e731807625"
-          ]
-        }
-      },
-      "publisher": {
-        "name": "APS"
-      },
-      "rights": {
-        "rightsStatement": "©2021 American Physical Society",
-        "copyrightYear": 2021,
-        "copyrightHolders": [
-          {
-            "name": "American Physical Society"
-          }
-        ],
-        "creativeCommons": false,
-        "licenses": [
-          {
-            "url": "http://link.aps.org/licenses/aps-default-license"
-          }
+    "abstract": {
+      "value": "\u003Cp\u003EThe method of \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E cumulants has been shown as a powerful tool to study the fine details of the azimuthal anisotropies in high-energy nucleus-nucleus collisions. A new method for the fast calculation of arbitrary order \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-cumulant \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmi\u003En\u003C/mi\u003E\u003C/msub\u003E\u003Cmrow\u003E\u003Cmo\u003E{\u003C/mo\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003Cmi\u003Ek\u003C/mi\u003E\u003Cmo\u003E}\u003C/mo\u003E\u003C/mrow\u003E\u003C/mrow\u003E\u003C/math\u003E values, based on the partition of a non-negative integer \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003El\u003C/mi\u003E\u003Cmo\u003E≤\u003C/mo\u003E\u003Cmi\u003Em\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E for calculation of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003Cmi\u003Em\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-particle azimuthal correlations is presented in this paper. Unlike the standard \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-cumulants method in which the calculation of high-order multiparticle calculations is impractical, the newly proposed method enables easy calculation. The validity of the method is proven via a toy model that uses the elliptic power distribution to simulate anisotropic emission of particles. The method enables the study of fine details of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003C/msub\u003E\u003C/math\u003E distribution, such as higher-order central moments of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003C/msub\u003E\u003C/math\u003E distribution, as well as the hydrodynamic behavior of the quark-gluon plasma.\u003C/p\u003E",
+      "format": "html"
+    },
+    "articleType": "article",
+    "authors": [
+      {
+        "type": "Person",
+        "name": "L. Nađđerđ",
+        "firstname": "L.",
+        "surname": "Nađđerđ",
+        "affiliationIds": [
+          "a1",
+          "a2"
         ]
       },
-      "journal": {
-        "id": "PRA",
-        "abbreviatedName": "Phys. Rev. A",
-        "name": "Physical Review A"
+      {
+        "type": "Person",
+        "name": "J. Milošević",
+        "firstname": "J.",
+        "surname": "Milošević",
+        "affiliationIds": [
+          "a1",
+          "a2"
+        ]
       },
-      "title": {
-        "value": "Continuous real-time sensing with a nitrogen-vacancy center via coherent population trapping",
-        "format": "html"
+      {
+        "type": "Person",
+        "name": "D. Devetak",
+        "firstname": "D.",
+        "surname": "Devetak",
+        "affiliationIds": [
+          "a1",
+          "a2"
+        ]
       },
-      "tocSection": {
-        "label": "Quantum technologies"
+      {
+        "type": "Person",
+        "name": "F. Wang",
+        "firstname": "F.",
+        "surname": "Wang",
+        "affiliationIds": [
+          "a3"
+        ]
       },
-      "volume": {
-        "number": "103"
+      {
+        "type": "Person",
+        "name": "X. Zhu",
+        "firstname": "X.",
+        "surname": "Zhu",
+        "affiliationIds": [
+          "a2",
+          "a4"
+        ]
+      }
+    ],
+    "affiliations": [
+      {
+        "name": "\u003Ca href=\"https://ror.org/04wecwh56\"\u003EVinča Institute of Nuclear Sciences\u003C/a\u003E—National Institute of the Republic of Serbia, \u003Ca href=\"https://ror.org/02qsmb048\"\u003EUniversity of Belgrade\u003C/a\u003E, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia",
+        "id": "a1"
+      },
+      {
+        "name": "Strong Coupling Physics International Research Laboratory, \u003Ca href=\"https://ror.org/04mvpxy20\"\u003EHuzhou University\u003C/a\u003E, Huzhou, Zhejiang 313000, People's Republic of China",
+        "id": "a2"
+      },
+      {
+        "name": "Department of Physics and Astronomy, \u003Ca href=\"https://ror.org/02dqehb95\"\u003EPurdue University\u003C/a\u003E, Indiana 47907, USA",
+        "id": "a3"
+      },
+      {
+        "name": "College of Science, \u003Ca href=\"https://ror.org/04mvpxy20\"\u003EHuzhou University\u003C/a\u003E, Huzhou, Zhejiang 313000, People's Republic of China",
+        "id": "a4"
+      }
+    ],
+    "date": "2026-02-13",
+    "fundings": [
+      {
+        "funderId": "http://dx.doi.org/10.13039/501100001809",
+        "funderName": "National Natural Science Foundation of China",
+        "awards": [
+          "12035006",
+          "12075085",
+          "12147219"
+        ]
+      },
+      {
+        "funderId": "http://dx.doi.org/10.13039/100000015",
+        "funderName": "U.S. Department of Energy",
+        "awards": [
+          "de-sc0012910"
+        ]
+      },
+      {
+        "funderId": null,
+        "funderName": "Ministry of Science, Technological Development and Innovation of Republic of Serbia",
+        "awards": [
+          "0102502",
+          "JINR-Serbia_P23",
+          "JINR-Serbia_P39"
+        ]
+      }
+    ],
+    "type": "article",
+    "metadata_last_modified_at": "2026-02-13T15:30:32+0000",
+    "last_modified_at": "2026-02-13T15:30:32+0000",
+    "id": "10.1103/ycxy-lwqd",
+    "identifiers": {
+      "doi": "10.1103/ycxy-lwqd",
+      "arxiv": "arXiv:2506.00535"
+    },
+    "issue": {
+      "number": "2"
+    },
+    "pageStart": "024906",
+    "hasArticleId": true,
+    "numPages": 10,
+    "classificationSchemes": {
+      "physh": {
+        "concepts": [
+          {
+            "id": "7321e0f7-3b12-45a2-aa4a-28c2a7e03149",
+            "facet": {
+              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+            },
+            "primary": false
+          },
+          {
+            "id": "63ac8383-f353-4343-9c94-de98d9631340",
+            "facet": {
+              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+            },
+            "primary": true
+          },
+          {
+            "id": "ed47e543-18fb-4597-9384-a5fc4c7921f5",
+            "facet": {
+              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+            },
+            "primary": false
+          }
+        ],
+        "disciplines": [
+          "0213a5a0-0742-43f3-804b-3ccea08a13c0"
+        ]
       }
     },
-    {
-      "abstract": {
-        "value": "<p>Recent advances in ultracold atoms in optical lattices and developments in surface science have allowed for the creation of artificial lattices as well as the control of many-body interactions. Such systems provide new settings to investigate interaction-driven instabilities and nontrivial topology. In this paper, we explore the interplay between molecular electric dipoles on a two-dimensional triangular lattice with fermions hopping on the dual decorated honeycomb lattice which hosts Dirac and flat band states. We show that short-range dipole-dipole interaction can lead to ordering into various stripe and vortex crystal ground states. We study these ordered states and their thermal transitions as a function of the interaction range using simulated annealing and Monte Carlo methods. For the special case of zero-wave-vector ferrodipolar order, incorporating dipole-electron interactions and integrating out the electrons leads to a six-state clock model for the dipole ordering. Finally, we discuss the impact of the various dipole orders on the electronic band structure and the local tunneling density of states. Our work may be relevant to studies of “molecular graphene”—CO molecules arranged on the Cu(111) surface—which have been explored using scanning tunneling spectroscopy, as well as ultracold molecule-fermion mixtures in optical lattices.</p>",
-        "format": "html"
-      },
-      "articleType": "article",
-      "authors": [
+    "publisher": {
+      "name": "APS"
+    },
+    "rights": {
+      "rightsStatement": "Published by the American Physical Society",
+      "copyrightYear": 2026,
+      "copyrightHolders": [],
+      "creativeCommons": true,
+      "licenses": [
         {
-          "type": "Person",
-          "name": "Nazim Boudjada",
-          "firstname": "Nazim",
-          "surname": "Boudjada",
-          "affiliationIds": ["a1"]
-        },
-        {
-          "type": "Person",
-          "name": "Finn Lasse Buessen",
-          "firstname": "Finn Lasse",
-          "surname": "Buessen",
-          "affiliationIds": ["a1"]
-        },
-        {
-          "type": "Person",
-          "name": "Arun Paramekanti",
-          "firstname": "Arun",
-          "surname": "Paramekanti",
-          "affiliationIds": ["a1"]
+          "url": "https://creativecommons.org/licenses/by/4.0/",
+          "licenseStatement": "Published by the American Physical Society under the terms of the \u003Ca href=\"https://creativecommons.org/licenses/by/4.0/\"\u003ECreative Commons Attribution 4.0 International\u003C/a\u003E license. Further distribution of this work must maintain attribution to the author(s) and the published article's title, journal citation, and DOI. Funded by SCOAP\u003Csup\u003E3\u003C/sup\u003E."
         }
-      ],
-      "affiliations": [
-        {
-          "name": "Department of Physics and Astronomy, <a href=\"https://ror.org/02vm5rt34\">Vanderbilt University</a>, Nashville, Tennessee 37240, USA",
-          "id": "a1"
-        }
-      ],
-      "notes": [
-        {
-          "format": "html",
-          "value": "<p>arunp@physics.utoronto.ca</p>",
-          "label": "*",
-          "id": "n1",
-          "type": "contrib"
-        }
-      ],
-      "date": "2021-04-12",
-      "fundings": [
-        {
-          "funderId": "http://dx.doi.org/10.13039/501100000038",
-          "funderName": "Natural Sciences and Engineering Research Council of Canada",
-          "awards": []
-        }
-      ],
-      "type": "article",
-      "metadata_last_modified_at": "2021-04-12T14:02:31+0000",
-      "last_modified_at": "2021-04-12T14:02:30+0000",
-      "id": "10.1103/PhysRevB.103.165408",
-      "identifiers": {
-        "doi": "10.1103/PhysRevB.103.165408",
-        "arxiv": "arXiv:2012.07847"
-      },
-      "issue": {
-        "number": "16"
-      },
-      "pageStart": "165408",
-      "hasArticleId": true,
-      "numPages": 11,
-      "classificationSchemes": {
-        "physh": {
-          "concepts": [
-            {
-              "id": "eb9bd2e1-eedd-4bd0-997d-58b44ffa3ebb",
-              "facet": {
-                "id": "233a6cd0-b7fe-491b-b5fd-85fd6b2a7c79"
-              },
-              "primary": false
-            },
-            {
-              "id": "7b1d5a31-bb4e-4b73-ae62-1c68e9c6006e",
-              "facet": {
-                "id": "f45b3c40-959c-4e90-ba0e-38232980802a"
-              },
-              "primary": false
-            },
-            {
-              "id": "273474b6-f607-4b62-b5b6-8de8bca28814",
-              "facet": {
-                "id": "f45b3c40-959c-4e90-ba0e-38232980802a"
-              },
-              "primary": false
-            },
-            {
-              "id": "0030808d-6a1a-4ce5-974a-748b5ef3eeba",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": false
-            },
-            {
-              "id": "979074fa-fadd-4ebe-acf1-0a9c92fb1848",
-              "facet": {
-                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-              },
-              "primary": true
-            }
-          ],
-          "disciplines": ["a48f173e-6459-4642-a711-a6e731807625"]
-        }
-      },
-      "publisher": {
-        "name": "APS"
-      },
-      "rights": {
-        "rightsStatement": "©2021 American Physical Society",
-        "copyrightYear": 2021,
-        "copyrightHolders": [
-          {
-            "name": "American Physical Society"
-          }
-        ],
-        "creativeCommons": false,
-        "licenses": [
-          {
-            "url": "http://link.aps.org/licenses/aps-default-license"
-          }
-        ]
-      },
-      "journal": {
-        "id": "PRB",
-        "abbreviatedName": "Phys. Rev. B",
-        "name": "Physical Review B"
-      },
-      "title": {
-        "value": "Molecular dipoles in designer honeycomb lattices",
-        "format": "html"
-      },
-      "tocSection": {
-        "label": "Surface physics, nanoscale physics, low-dimensional systems"
-      },
-      "volume": {
-        "number": "103"
-      }
+      ]
+    },
+    "journal": {
+      "id": "PRC",
+      "abbreviatedName": "Phys. Rev. C",
+      "name": "Physical Review C"
+    },
+    "title": {
+      "value": "Novel approach to a fast calculation of high-order \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E cumulants",
+      "format": "html"
+    },
+    "tocSection": {
+      "label": "Relativistic Nuclear Collisions"
+    },
+    "volume": {
+      "number": "113"
     }
+  }
   ]
 }
