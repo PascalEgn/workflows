@@ -40,6 +40,11 @@ def replace_authors_with_xml_authors(
     return parsed_json
 
 
+def add_data_availability(parsed_json, parsed_xml):
+    parsed_json["data_availability"] = parsed_xml["data_availability"]
+    return parsed_json
+
+
 @dag(
     schedule=None,
     start_date=pendulum.today("UTC").add(days=-1),
@@ -105,6 +110,11 @@ def aps_process_file():
         )
 
     @task()
+    def add_data_availability(parsed_json, parsed_xml):
+        parsed_json["data_availability"] = parsed_xml["data_availability"]
+        return parsed_json
+
+    @task()
     def save_to_s3(complete_file):
         upload_json_to_s3(json_record=complete_file, repo=s3_client)
 
@@ -118,6 +128,7 @@ def aps_process_file():
     enriched_file = enrich(enhanced_file_with_files)
     parsed_xml = parse_xml(enriched_file["files"]["xml"])
     complete_file = replace_authors_with_xml_authors(enriched_file, parsed_xml)
+    complete_file = add_data_availability(complete_file, parsed_xml)
     save_to_s3(complete_file)
     create_or_update(complete_file)
 

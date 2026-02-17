@@ -6,6 +6,7 @@ import pytest
 from airflow.models import DagBag
 from aps.aps_api_client import APSApiClient
 from aps.aps_process_file import (
+    add_data_availability,
     enhance_aps,
     enrich_aps,
     replace_authors_with_xml_authors,
@@ -51,7 +52,7 @@ def populated_file(enhanced_article, aps_api_client_fixture):
     if "dois" not in enhanced_article:
         return enhanced_article
 
-    doi = "10.1103/ycxy-lwqd"
+    doi = "10.1103/yb33-p593"
 
     pdf = aps_api_client_fixture.get_pdf_file(doi=doi)
     xml = aps_api_client_fixture.get_xml_file(doi=doi)
@@ -86,7 +87,7 @@ def dag():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 8
+    assert len(dag.tasks) == 9
 
 
 def remove_ignored_fields(data, fields_to_ignore):
@@ -116,6 +117,7 @@ def test_process_file(enriched_article, parsed_article_xml, shared_datadir):
     complete_file = replace_authors_with_xml_authors(
         enriched_article, parsed_article_xml
     )
+    complete_file = add_data_availability(complete_file, parsed_article_xml)
 
     complete_file_serializable = encode_binary(complete_file)
 

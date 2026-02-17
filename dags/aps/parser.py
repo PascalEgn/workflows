@@ -165,6 +165,7 @@ class APSXMLParser(IParser):
     def __init__(self):
         extractors = [
             XMLCustomExtractor("authors", self._get_authors),
+            XMLCustomExtractor("data_availability", self._get_data_availability),
         ]
         super().__init__(extractors)
 
@@ -234,10 +235,57 @@ class APSXMLParser(IParser):
 
             orcid = contrib.find("./contrib-id[@contrib-id-type='orcid']")
             if orcid is not None:
-                author["orcid"] = orcid.text
+                author["orcid"] = orcid.text.strip() if orcid.text else None
 
             author["affiliations"] = self._get_affiliations(article, contrib)
 
             authors.append(author)
 
         return authors
+
+    def _get_data_availability(self, article):
+        data_availability_sec = article.find(".//sec[@sec-type='data-availability']")
+
+        statement_parts = []
+        for p in data_availability_sec.findall(".//p"):
+            if p.text:
+                statement_parts.append(p.text.strip())
+            for elem in p:
+                if elem.tail:
+                    statement_parts.append(elem.tail.strip())
+        statement = " ".join(filter(None, statement_parts))
+
+        urls = []
+        xref_elements = data_availability_sec.findall(".//xref[@ref-type='bibr']")
+
+        for xref in xref_elements:
+            ref_ids = xref.get("rid").split(" ")
+            for ref_id in ref_ids:
+                ref_element = article.find(f".//ref[@id='{ref_id}']")
+                if ref_element is not None:
+                    doi_element = ref_element.find(".//pub-id[@pub-id-type='doi']")
+                    if doi_element is not None and doi_element.get("xlink:href"):
+                        urls.append(doi_element.get("xlink:href"))
+                    elif doi_element is not None and doi_element.text:
+                        doi_text = doi_element.text.strip()
+                        if doi_text.startswith("http"):
+                            urls.append(doi_text)
+                        else:
+                            urls.append(f"https://doi.org/{doi_text}")
+                    else:
+                        arxiv_element = ref_element.find(
+                            ".//pub-id[@pub-id-type='arxiv']"
+                        )
+                        if arxiv_element is not None and arxiv_element.text:
+                            arxiv_text = arxiv_element.text.strip()
+                            if arxiv_text.startswith("arXiv:"):
+                                arxiv_text = arxiv_text[6:]
+                            urls.append(f"https://arxiv.org/abs/{arxiv_text}")
+
+        result = {"statement": None, "urls": None}
+        if statement:
+            result["statement"] = statement
+        if urls:
+            result["urls"] = urls
+
+        return result if result else None

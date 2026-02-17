@@ -11,7 +11,7 @@ def aps_api_client_fixture():
     return APSApiClient()
 
 
-# @pytest.mark.vcr
+@pytest.mark.vcr
 def test_get_articles_metadata(aps_api_client_fixture, shared_datadir):
     parameters = APSParams(
         from_date="2021-04-10", until_date="2022-04-10", per_page=1

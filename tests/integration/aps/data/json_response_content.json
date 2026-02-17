@@ -16,45 +16,6 @@
           "a1",
           "a2"
         ]
-      },
-      {
-        "type": "Person",
-        "name": "J. Milošević",
-        "firstname": "J.",
-        "surname": "Milošević",
-        "affiliationIds": [
-          "a1",
-          "a2"
-        ]
-      },
-      {
-        "type": "Person",
-        "name": "D. Devetak",
-        "firstname": "D.",
-        "surname": "Devetak",
-        "affiliationIds": [
-          "a1",
-          "a2"
-        ]
-      },
-      {
-        "type": "Person",
-        "name": "F. Wang",
-        "firstname": "F.",
-        "surname": "Wang",
-        "affiliationIds": [
-          "a3"
-        ]
-      },
-      {
-        "type": "Person",
-        "name": "X. Zhu",
-        "firstname": "X.",
-        "surname": "Zhu",
-        "affiliationIds": [
-          "a2",
-          "a4"
-        ]
       }
     ],
     "affiliations": [
