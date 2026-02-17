@@ -18,5 +18,9 @@
     }
   ],
   "copyright_year": "2025",
-  "journal_doctype": "article"
+  "journal_doctype": "article",
+  "data_availability": {
+      "statement": "All data is included in the paper.",
+      "urls": null
+  }
 }

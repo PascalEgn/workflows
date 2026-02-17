@@ -245,6 +245,7 @@ class APSXMLParser(IParser):
 
     def _get_data_availability(self, article):
         data_availability_sec = article.find(".//sec[@sec-type='data-availability']")
+        result = {"statement": None, "urls": None}
 
         statement_parts = []
         for p in data_availability_sec.findall(".//p"):
@@ -282,7 +283,6 @@ class APSXMLParser(IParser):
                                 arxiv_text = arxiv_text[6:]
                             urls.append(f"https://arxiv.org/abs/{arxiv_text}")
 
-        result = {"statement": None, "urls": None}
         if statement:
             result["statement"] = statement
         if urls:
