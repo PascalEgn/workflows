@@ -136,12 +136,12 @@ def test_data_available(data_article):
         "data_availability": {
             "statement": "The data supporting the findings of this article are openly available .",
             "urls": [
-                "https://doi.org/10.1103/PhysRevC.88.044910",
-                "https://doi.org/10.1103/PhysRevC.101.044907",
-                "https://doi.org/10.1016/j.physletb.2018.12.048",
-                "https://arxiv.org/abs/2504.02505",
-                "https://doi.org/10.1103/PhysRevC.83.024913",
-                "https://doi.org/10.5281/zenodo.15848379",
+                "10.1103/PhysRevC.88.044910",
+                "10.1103/PhysRevC.101.044907",
+                "10.1016/j.physletb.2018.12.048",
+                "arXiv:2504.02505",
+                "10.1103/PhysRevC.83.024913",
+                "10.5281/zenodo.15848379",
             ],
         }
     }

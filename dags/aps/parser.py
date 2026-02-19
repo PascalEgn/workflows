@@ -264,24 +264,9 @@ class APSXMLParser(IParser):
             for ref_id in ref_ids:
                 ref_element = article.find(f".//ref[@id='{ref_id}']")
                 if ref_element is not None:
-                    doi_element = ref_element.find(".//pub-id[@pub-id-type='doi']")
-                    if doi_element is not None and doi_element.get("xlink:href"):
-                        urls.append(doi_element.get("xlink:href"))
-                    elif doi_element is not None and doi_element.text:
-                        doi_text = doi_element.text.strip()
-                        if doi_text.startswith("http"):
-                            urls.append(doi_text)
-                        else:
-                            urls.append(f"https://doi.org/{doi_text}")
-                    else:
-                        arxiv_element = ref_element.find(
-                            ".//pub-id[@pub-id-type='arxiv']"
-                        )
-                        if arxiv_element is not None and arxiv_element.text:
-                            arxiv_text = arxiv_element.text.strip()
-                            if arxiv_text.startswith("arXiv:"):
-                                arxiv_text = arxiv_text[6:]
-                            urls.append(f"https://arxiv.org/abs/{arxiv_text}")
+                    for pub_id in ref_element.findall(".//pub-id"):
+                        if pub_id.text:
+                            urls.append(pub_id.text.strip())
 
         if statement:
             result["statement"] = statement
