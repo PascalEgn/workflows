@@ -329,3 +329,57 @@ class SpringerParser(IParser):
             "pdfa": pdfa_path,
             "xml": self.file_path,
         }
+
+
+class SpringerPDFParser(IParser):
+    def __init__(self, pdf_path=None):
+        extractors = [
+            CustomExtractor(
+                destination="data_availability",
+                extraction_function=self._get_data_availability,
+            ),
+            CustomExtractor(
+                destination="code_availability",
+                extraction_function=self._get_code_availability,
+            ),
+        ]
+        super().__init__(extractors)
+
+    def extract_url_arxiv_doi(self, text):
+        pattern = re.compile(
+            r"(https?://[^\s]+)|"
+            r"(arXiv:(\d{4}\.\d{4,5})(v\d+)?|"
+            r"arXiv:[a-z\-]+/\d{7}(v\d+)?)|"
+            r"(10\.\d{4,9}/[-._;()/:A-Z0-9]+)",
+            re.IGNORECASE,
+        )
+        matches = pattern.findall(text)
+        return [m[0] or m[1] or m[4] for m in matches]
+
+    def _get_data_availability(self, text: str):
+        result = {"statement": None, "urls": None}
+        pattern = r"""
+            Data\s*Avail(?:ability|ibility)\s*Statement
+            \s*[:.\-–—]?\s*
+            (.*?)
+            (?=\n\s*\n[A-Z][A-Za-z ]{2,}|\Z)
+        """
+        match = re.search(pattern, text, flags=re.DOTALL | re.VERBOSE)
+        if match:
+            result["statement"] = match.group(1).strip()
+            result["urls"] = list(set(self.extract_url_arxiv_doi(result["statement"])))
+        return result
+
+    def _get_code_availability(self, text: str):
+        result = {"statement": None, "urls": None}
+        pattern = r"""
+            Code\s*Availab(?:ility|ilibility)\s*Statement
+            \s*[:.\-–—]?\s*
+            (.*?)
+            (?=\n\s*\n[A-Z][A-Za-z ]{2,}|\Z)
+        """
+        match = re.search(pattern, text, flags=re.DOTALL | re.VERBOSE)
+        if match:
+            result["statement"] = match.group(1).strip()
+            result["urls"] = list(set(self.extract_url_arxiv_doi(result["statement"])))
+        return result

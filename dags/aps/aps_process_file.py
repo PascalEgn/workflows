@@ -50,7 +50,7 @@ def add_data_availability(parsed_json, parsed_xml):
     start_date=pendulum.today("UTC").add(days=-1),
     tags=["process", "aps"],
     params={
-        "fail_if_author_count_not_equal": Param(True, type=bool),
+        "fail_if_author_count_not_equal": Param(True, type="boolean"),
     },
 )
 def aps_process_file():

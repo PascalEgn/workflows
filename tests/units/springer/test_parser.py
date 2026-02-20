@@ -1,10 +1,15 @@
 import xml.etree.ElementTree as ET
-from os import listdir
+from io import BytesIO
+from os import listdir, path
 
 import pytest
 from common.enhancer import Enhancer
 from springer.parser import SpringerParser
-from springer.springer_process_file import process_xml
+from springer.springer_process_file import (
+    extract_text_from_pdf,
+    process_xml,
+    springer_parse_pdf,
+)
 
 
 @pytest.fixture(scope="module")
@@ -16,9 +21,10 @@ def parser():
 def articles(datadir):
     articles = []
     for filename in sorted(listdir(datadir)):
-        with open(datadir / filename) as file:
-            xml = process_xml(file.read())
-            articles.append(ET.fromstring(xml))
+        if filename.endswith(".xml"):
+            with open(datadir / filename) as file:
+                xml = process_xml(file.read())
+                articles.append(ET.fromstring(xml))
     return articles
 
 
@@ -598,3 +604,70 @@ def test_article_with_no_affiliations(article_with_no_affiliations):
 
     for d in expected_output:
         assert d in article_with_no_affiliations["authors"]
+
+
+def test_pdf_data_availability_parsing(datadir):
+    def file_to_bytesio(path: str) -> BytesIO:
+        buffer = BytesIO()
+        with open(path, "rb") as f:
+            buffer.write(f.read())
+
+        buffer.seek(0)
+        return buffer
+
+    pdf_1_filename = "data_and_code_available_1.pdf"
+    pdf_1_path = path.join(datadir, pdf_1_filename)
+    pdf_1_buffer = file_to_bytesio(pdf_1_path)
+    pdf_1_expected = {
+        "data_availability": {
+            "statement": "My manuscript has no associated data. [Author's comment: Ancillary files with data of the figures are appended to the arXiv submission, arxiv:2503.09415 [physics.data-an].]",
+            "urls": ["arxiv:2503.09415"],
+        },
+        "code_availability": {
+            "statement": "This manuscript has associated code/ software in a data repository. [Author's comment: The code/software generated during and/or analysed during the current study is available in the smash-transport/sparkx Zenodo repository, https://zenodo.org/ records/15838371.]",
+            "urls": ["https://zenodo.org/"],
+        },
+    }
+
+    pdf_2_filename = "data_and_code_available_2.pdf"
+    pdf_2_path = path.join(datadir, pdf_2_filename)
+    pdf_2_buffer = file_to_bytesio(pdf_2_path)
+    pdf_2_expected = {
+        "data_availability": {
+            "statement": "This manuscript has associated data in a data repository. [Authors' comment: The public release of data supporting the findings of this article will follow the CERN Open Data Policy [124]. Inquiries about plots and tables associated with this article can be addressed to atlas.publications@cern.ch.]",
+        },
+        "code_availability": {
+            "statement": "Thismanuscripthasassociatedcode/software in a data repository. [Authors' comment: The ATLAS Collaboration's Athena software, including the configuration of the event generators, is open source (https://gitlab.cern.ch/atlas/athena).]",
+            "urls": ["https://gitlab.cern.ch/atlas/athena).]"],
+        },
+    }
+
+    pdf_3_filename = "no_data_and_code_available.pdf"
+    pdf_3_path = path.join(datadir, pdf_3_filename)
+    pdf_3_buffer = file_to_bytesio(pdf_3_path)
+    pdf_3_expected = {
+        "data_availability": {
+            "statement": "This article has no associated data or the data will not be deposited.",
+        },
+        "code_availability": {
+            "statement": "This article has no associated code or the code will not be deposited.",
+        },
+    }
+
+    pdf_1_text = extract_text_from_pdf(pdf_1_buffer, pdf_1_filename)
+    pdf_1_parsed = springer_parse_pdf(pdf_1_text)
+
+    pdf_2_text = extract_text_from_pdf(pdf_2_buffer, pdf_2_filename)
+    pdf_2_parsed = springer_parse_pdf(pdf_2_text)
+
+    pdf_3_text = extract_text_from_pdf(pdf_3_buffer, pdf_3_filename)
+    pdf_3_parsed = springer_parse_pdf(pdf_3_text)
+
+    assert "data_availability" in pdf_1_parsed
+    assert pdf_1_expected == pdf_1_parsed
+
+    assert "data_availability" in pdf_2_parsed
+    assert pdf_2_expected == pdf_2_parsed
+
+    assert "data_availability" in pdf_3_parsed
+    assert pdf_3_expected == pdf_3_parsed
