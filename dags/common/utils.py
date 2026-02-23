@@ -86,8 +86,7 @@ def extract_text(article, path, field_name, dois):
     try:
         return article.find(path).text
     except AttributeError:
-        # logger.error("%s is not found in XML. DOIs: %s", field_name, dois)
-        return
+        logger.error("%s is not found in XML. DOIs: %s", field_name, dois)
 
 
 def append_not_excluded_files(filename, exclude_directories, list_of_files):

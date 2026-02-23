@@ -127,8 +127,8 @@ def aps_process_file():
     enhanced_file_with_files = populate_files(enhanced_file)
     enriched_file = enrich(enhanced_file_with_files)
     parsed_xml = parse_xml(enriched_file["files"]["xml"])
-    complete_file = replace_authors_with_xml_authors(enriched_file, parsed_xml)
-    complete_file = add_data_availability(complete_file, parsed_xml)
+    replaced_authors_file = replace_authors_with_xml_authors(enriched_file, parsed_xml)
+    complete_file = add_data_availability(replaced_authors_file, parsed_xml)
     save_to_s3(complete_file)
     create_or_update(complete_file)
 

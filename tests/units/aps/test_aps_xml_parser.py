@@ -115,7 +115,6 @@ def test_authors(no_data_article):
         ]
     }
 
-    print(no_data_article["authors"])
     assert no_data_article["authors"] == expected_results["authors"]
 
 
