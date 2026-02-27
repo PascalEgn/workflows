@@ -1,17 +1,20 @@
+import io
 import json
 import logging
 import os
 import re
 import tarfile
 import xml.etree.ElementTree as ET
+import zipfile
 from datetime import date, datetime
-from io import BytesIO, StringIO
-from zipfile import ZipFile, is_zipfile
+from ftplib import error_perm
+from io import StringIO
+from stat import S_ISDIR, S_ISREG
 
+import backoff
 import requests
 from airflow.models.dagrun import DagRun
 from airflow.utils.state import DagRunState
-from backoff import expo, on_exception
 from common.constants import (
     BY_PATTERN,
     CDATA_PATTERN,
@@ -101,8 +104,6 @@ def find_extension(file):
 
 
 def walk_sftp(sftp, remotedir, paths):
-    from stat import S_ISDIR, S_ISREG
-
     for entry in sftp.listdir_attr(remotedir):
         remotepath = remotedir + "/" + entry.filename
         mode = entry.st_mode
@@ -113,8 +114,6 @@ def walk_sftp(sftp, remotedir, paths):
 
 
 def walk_ftp(ftp, remotedir, paths):
-    from ftplib import error_perm
-
     for entry in ftp.nlst(remotedir):
         try:
             ftp.cwd(entry)
@@ -196,7 +195,7 @@ def parse_without_names_spaces(xml):
             el.tag = el.tag.rpartition("}")[-1]
         root = it.root
     except ET.ParseError:
-        if isinstance(xml, BytesIO):
+        if isinstance(xml, io.BytesIO):
             xml = xml.getvalue().decode("utf-8")
         xml = remove_xml_namespaces(xml)
         if isinstance(xml, str):
@@ -243,7 +242,7 @@ def check_dagrun_state(dagrun: DagRun, not_allowed_states=None, allowed_states=N
 def process_zip_file(file_bytes, file_name, **kwargs):
     file_bytes.seek(0)
     only_specific_file = kwargs.get("only_specific_file")
-    with ZipFile(file_bytes) as zip:
+    with zipfile.ZipFile(file_bytes) as zip:
         for filename in zip.namelist():
             if only_specific_file and only_specific_file not in filename:
                 continue
@@ -267,7 +266,7 @@ def process_tar_file(file_bytes, file_name, **kwargs):
 
 
 def process_archive(file_bytes, file_name, **kwargs):
-    if is_zipfile(file_bytes):
+    if zipfile.is_zipfile(file_bytes):
         return process_zip_file(file_bytes, file_name, **kwargs)
     if tarfile.is_tarfile(file_bytes):
         return process_tar_file(file_bytes, file_name, **kwargs)
@@ -296,8 +295,8 @@ def parse_element_text(item):
     return full_text
 
 
-@on_exception(
-    expo,
+@backoff.on_exception(
+    backoff.expo,
     (requests.exceptions.ConnectionError, requests.exceptions.Timeout),
     max_tries=5,
 )
@@ -377,7 +376,7 @@ def get_country_ISO_name(country):
 
 
 def upload_json_to_s3(json_record, repo):
-    file_in_bytes = BytesIO(json.dumps(json_record, indent=2).encode("utf-8"))
+    file_in_bytes = io.BytesIO(json.dumps(json_record, indent=2).encode("utf-8"))
     current_date = datetime.now().date()
     current_date_str = current_date.strftime("%Y-%m-%d")
     current_date_and_time_str = current_date.strftime("%Y-%m-%d_%H:%M:%S")
