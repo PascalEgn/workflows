@@ -34,7 +34,7 @@ class TextExtractor(IExtractor):
 
     def _get_text_value(self, raw_value):
         try:
-            return raw_value.text
+            return "".join(raw_value.itertext()).strip()
         except AttributeError:
             logger.error("%s is not found in XML", self.destination)
             return
