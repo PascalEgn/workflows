@@ -19,6 +19,7 @@ class TextExtractor(IExtractor):
         extra_function=lambda s: s,
         prefixes=None,
         all_content_between_tags=False,
+        use_itertext=False,
         remove_tags=False,
     ):
         super().__init__(destination)
@@ -30,11 +31,19 @@ class TextExtractor(IExtractor):
         self.default_value = default_value
         self.extra_function = extra_function
         self.all_content_between_tags = all_content_between_tags
+        self.use_itertext = use_itertext
         self.remove_tags = remove_tags
 
     def _get_text_value(self, raw_value):
         try:
-            return raw_value.text
+            return raw_value.text.strip()
+        except AttributeError:
+            logger.error("%s is not found in XML", self.destination)
+            return
+
+    def _get_itertext_value(self, node):
+        try:
+            return "".join(node.itertext()).strip()
         except AttributeError:
             logger.error("%s is not found in XML", self.destination)
             return
@@ -80,6 +89,8 @@ class TextExtractor(IExtractor):
 
         if self.all_content_between_tags:
             value = self._get_content_as_text_value(node)
+        elif self.use_itertext:
+            value = self._get_itertext_value(node)
         else:
             value = self._get_text_value(node)
         processed_value = self._process_text_with_extra_function(value)
