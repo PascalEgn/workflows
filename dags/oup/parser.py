@@ -14,6 +14,7 @@ from common.utils import (
     clean_text,
     get_license_type_and_version_from_url,
     get_text_value,
+    parse_element_text,
 )
 
 logger = logging.getLogger("airflow.task")
@@ -198,14 +199,21 @@ class OUPParser(IParser):
                 addr_line = get_text_value(affiliation.find("addr-line"))
                 ror_id = self._extract_ror_from_text(addr_line)
 
-                _aff = {"organization": institution}
+                aff_value = clean_text(parse_element_text(affiliation))
+
+                _aff = {}
+                if aff_value:
+                    _aff["value"] = aff_value
+                if institution:
+                    _aff["organization"] = institution
                 if country:
                     country = country.capitalize()
                     _aff["country"] = country
                 if ror_id:
                     _aff["ror"] = ror_id
 
-                full_affiliation.append(_aff)
+                if _aff:
+                    full_affiliation.append(_aff)
 
             if not all([surname, given_names, email]) and not full_affiliation:
                 pass
