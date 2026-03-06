@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import timedelta
 
 import pendulum
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -31,18 +30,7 @@ def get_latest_s3_file():
     return latest_timestamp
 
 
-default_args = {
-    "owner": "airflow",
-    "depends_on_past": False,
-    "email_on_failure": False,
-    "email_on_retry": False,
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
-
-
 @dag(
-    default_args=default_args,
     description="Transfer Crossref journal data to S3",
     schedule="35 */6 * * *",
     tags=["pull", "jagiellonian"],
