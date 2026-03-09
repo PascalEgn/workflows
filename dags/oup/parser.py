@@ -18,6 +18,7 @@ from common.utils import (
 )
 
 logger = logging.getLogger("airflow.task")
+ROR_PATTERN = r"https://ror\.org/([a-z0-9]+)"
 
 
 class OUPParser(IParser):
@@ -163,12 +164,22 @@ class OUPParser(IParser):
         if not text:
             return None
 
-        ror_pattern = r"https://ror\.org/([a-z0-9]+)"
-        match = re.search(ror_pattern, text, re.IGNORECASE)
+        match = re.search(ROR_PATTERN, text, re.IGNORECASE)
 
         if match:
             return match.group(1)
         return None
+
+    def _clean_affiliation_text(self, text):
+        return re.sub(
+            r"\s*,\s*",
+            ", ",
+            re.sub(
+                r",\s*,+",
+                ",",
+                re.sub(ROR_PATTERN, "", text, flags=re.IGNORECASE).strip(),
+            ),
+        )
 
     def _get_authors(self, article):
         contributions = article.findall(
@@ -195,15 +206,22 @@ class OUPParser(IParser):
                         "institution",
                     )
                 )
-
-                addr_line = get_text_value(affiliation.find("addr-line"))
-                ror_id = self._extract_ror_from_text(addr_line)
-
+                if not institution:
+                    institution = get_text_value(
+                        affiliation.find(
+                            "institution-wrap/institution",
+                        )
+                    )
                 aff_value = clean_text(parse_element_text(affiliation))
+                ror_id = self._extract_ror_from_text(aff_value)
 
                 _aff = {}
                 if aff_value:
-                    _aff["value"] = aff_value
+                    cleaned_aff_value = self._clean_affiliation_text(aff_value)
+                    if cleaned_aff_value:
+                        _aff["value"] = cleaned_aff_value
+                    else:
+                        _aff["value"] = aff_value
                 if institution:
                     _aff["organization"] = institution
                 if country:
