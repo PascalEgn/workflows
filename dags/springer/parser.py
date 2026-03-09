@@ -58,6 +58,8 @@ class SpringerParser(IParser):
             TextExtractor(
                 "title",
                 "./Journal/Volume/Issue/Article/ArticleInfo/ArticleTitle",
+                required=True,
+                use_itertext=True,
             ),
             CustomExtractor("authors", self._get_authors),
             TextExtractor(
