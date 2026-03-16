@@ -1,10 +1,13 @@
 import base64
+import os
 import xml.etree.ElementTree as ET
+from io import BytesIO
 from zipfile import ZipFile
 
 import pytest
 from airflow.models import DagBag
 from freezegun import freeze_time
+from springer.repository import SpringerRepository
 from springer.springer_process_file import (
     springer_enhance_file,
     springer_enrich_file,
@@ -13,6 +16,25 @@ from springer.springer_process_file import (
 )
 
 DAG_NAME = "springer_process_file"
+
+
+def extract_zip_entries(zip_filename):
+    with ZipFile(zip_filename, "r") as zip_file:
+        return {
+            file.filename: zip_file.read(file.filename)
+            for file in zip_file.filelist
+            if not file.is_dir()
+        }
+
+
+def read_first_xml_from_zip(zip_filename):
+    entries = extract_zip_entries(zip_filename)
+    xml_files = [
+        content
+        for filename, content in entries.items()
+        if ".Meta" in filename or ".scoap" in filename
+    ]
+    return xml_files[0]
 
 
 @pytest.fixture
@@ -27,17 +49,7 @@ def article():
     data_dir = "./data/springer/JHEP/"
     test_file = "ftp_PUB_19-01-29_20-02-10_JHEP.zip"
 
-    def extract_zip_to_article(zip_filename):
-        with ZipFile(zip_filename, "r") as zip_file:
-            xmls = [
-                file.filename
-                for file in zip_file.filelist
-                if ".Meta" in file.filename or ".scoap" in file.filename
-            ]
-            xmls_content = [zip_file.read(xml) for xml in xmls]
-            return xmls_content[0]
-
-    article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
+    article = ET.fromstring(read_first_xml_from_zip(data_dir + test_file))
     return article
 
 
@@ -46,17 +58,7 @@ def jhep_data_article():
     data_dir = "./data/springer/JHEP/"
     test_file = "ftp_PUB_26-02-19_08-01-28_data.zip"
 
-    def extract_zip_to_article(zip_filename):
-        with ZipFile(zip_filename, "r") as zip_file:
-            xmls = [
-                file.filename
-                for file in zip_file.filelist
-                if ".Meta" in file.filename or ".scoap" in file.filename
-            ]
-            xmls_content = [zip_file.read(xml) for xml in xmls]
-            return xmls_content[0]
-
-    article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
+    article = ET.fromstring(read_first_xml_from_zip(data_dir + test_file))
     return article
 
 
@@ -65,18 +67,45 @@ def epjc_data_article():
     data_dir = "./data/springer/EPJC/"
     test_file = "ftp_PUB_26-01-26_08-01-27_data.zip"
 
-    def extract_zip_to_article(zip_filename):
-        with ZipFile(zip_filename, "r") as zip_file:
-            xmls = [
-                file.filename
-                for file in zip_file.filelist
-                if ".Meta" in file.filename or ".scoap" in file.filename
-            ]
-            xmls_content = [zip_file.read(xml) for xml in xmls]
-            return xmls_content[0]
-
-    article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
+    article = ET.fromstring(read_first_xml_from_zip(data_dir + test_file))
     return article
+
+
+@pytest.fixture
+def springer_data_files_in_s3():
+    repo = SpringerRepository()
+    repo.delete_all()
+    archives = [
+        (
+            "./data/springer/EPJC/ftp_PUB_26-01-26_08-01-27_data.zip",
+            "EPJC/ftp_PUB_26-01-26_08-01-27_data",
+        ),
+        (
+            "./data/springer/JHEP/ftp_PUB_26-02-19_08-01-28_data.zip",
+            "JHEP/ftp_PUB_26-02-19_08-01-28_data",
+        ),
+    ]
+
+    for zip_path, s3_prefix in archives:
+        for inner_path, content in extract_zip_entries(zip_path).items():
+            if inner_path.startswith("__MACOSX/") or os.path.basename(
+                inner_path
+            ).startswith("."):
+                continue
+            repo.save(f"{s3_prefix}/{inner_path}", BytesIO(content))
+
+    s3_files = {obj.key for obj in repo.s3.objects.all()}
+    assert (
+        "extracted/EPJC/ftp_PUB_26-01-26_08-01-27_data/JOU=10052/VOL=2026.86/ISU=1/ART=15241/BodyRef/PDF/10052_2025_Article_15241.pdf"
+        in s3_files
+    )
+    assert (
+        "extracted/JHEP/ftp_PUB_26-02-19_08-01-28_data/JOU=13130/VOL=2026.2026/ISU=2/ART=28203/BodyRef/PDF/13130_2026_Article_28203.pdf"
+        in s3_files
+    )
+
+    yield
+    repo.delete_all()
 
 
 def test_dag_loaded(dag):
@@ -283,7 +312,9 @@ def test_dag_process_file_no_input_file(article):
         springer_parse_file()
 
 
-def test_extract_data_availability_data(dag, epjc_data_article):
+def test_extract_data_availability_data(
+    dag, epjc_data_article, springer_data_files_in_s3
+):
     expected = {
         "statement": "This manuscript has associated data in a data repository. [Authors' comment: The public release of data supporting the findings of this article will follow the CERN Open Data Policy [124]. Inquiries about plots and tables associated with this article can be addressed to atlas.publications@cern.ch.]\nThismanuscripthasassociatedcode/software in a data repository. [Authors' comment: The ATLAS Collaboration's Athena software, including the configuration of the event generators, is open source (https://gitlab.cern.ch/atlas/athena).]",
         "urls": [
@@ -302,7 +333,9 @@ def test_extract_data_availability_data(dag, epjc_data_article):
     assert result["data_availability"] == expected
 
 
-def test_extract_data_availability_no_data(dag, jhep_data_article):
+def test_extract_data_availability_no_data(
+    dag, jhep_data_article, springer_data_files_in_s3
+):
     expected = {
         "statement": "This article has no associated data or the data will not be deposited.\nThis article has no associated code or the code will not be deposited.",
     }
