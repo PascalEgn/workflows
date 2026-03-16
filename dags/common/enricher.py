@@ -25,77 +25,52 @@ class Enricher:
 
     def _get_arxiv_categories_from_response_xml(self, xml):
         xml_namespaces = {
-            "arxiv": "http://arxiv.org/schemas/atom",
-            "w3": "http://www.w3.org/2005/Atom",
+            "oai": "http://www.openarchives.org/OAI/2.0/",
+            "arxiv": "http://arxiv.org/OAI/arXiv/",
         }
 
-        entries = xml.findall("./w3:entry", namespaces=xml_namespaces)
-        if len(entries) != 1:
+        categories_node = xml.find(
+            "./oai:GetRecord/oai:record/oai:metadata/arxiv:arXiv/arxiv:categories",
+            namespaces=xml_namespaces,
+        )
+        if categories_node is None or not categories_node.text:
             return []
-        entry = entries[0]
 
-        primary_categories = [
-            node.attrib["term"]
-            for node in entry.findall(
-                "./arxiv:primary_category", namespaces=xml_namespaces
-            )
-        ]
-        if not primary_categories:
-            return []
-        if len(primary_categories) > 1:
-            logger.error(
-                "Arxiv returned multiple primary categories: %s",
-                primary_categories,
-            )
-            return []
-        primary_category = primary_categories[0]
-
-        secondary_categories = [
-            node.attrib["term"]
-            for node in entry.findall("./w3:category", namespaces=xml_namespaces)
-        ]
-        for index, secondary_category in enumerate(secondary_categories):
-            if secondary_category == primary_category:
-                secondary_categories.pop(index)
-
-        return list([primary_category] + secondary_categories)
+        return categories_node.text.strip().split()
 
     @backoff.on_exception(
         backoff.expo, requests.exceptions.RequestException, max_time=60, max_tries=5
     )
-    def _get_arxiv_categories(self, arxiv_id=None, title=None, doi=None):
-        if arxiv_id is None and title is None and doi is None:
-            raise ValueError(
-                "One of the arxiv_id, title and doi parameters has to be different then None."
-            )
+    def _get_arxiv_categories(self, arxiv_id=None):
+        if arxiv_id is None:
+            raise ValueError("The arxiv_id parameter has to be different than None.")
 
         arxiv_id = self._clean_arxiv(arxiv_id)
-
-        params = {}
-        if arxiv_id:
-            params["id_list"] = arxiv_id
-        if title:
-            params["search_query"] = f'ti:"{title.replace("-", "?")}"'
-        response = requests.get("http://export.arxiv.org/api/query", params)
-
         categories = []
+
+        if arxiv_id:
+            response = requests.get(
+                f"https://oaipmh.arxiv.org/oai?verb=GetRecord&identifier=oai:arXiv.org:{arxiv_id}&metadataPrefix=arXiv"
+            )
+        else:
+            logger.warning(
+                "No arxiv_id provided for article. Skipping arxiv categories enrichment."
+            )
+            return categories
+
         if response.status_code == 200:
             xml = ET.fromstring(response.content)
             categories = self._get_arxiv_categories_from_response_xml(xml)
             if not categories:
                 logger.warning(
-                    "Could not get arxiv categories for arxiv_id: %s, title: %s, doi: %s",
+                    "Could not get arxiv categories for arxiv_id: %s",
                     arxiv_id,
-                    title,
-                    doi,
                 )
         else:
             logger.error(
-                "Got arxiv response error %s for arxiv_id: %s, title: %s, doi: %s",
+                "Got arxiv response error %s for arxiv_id: %s",
                 response.status_code,
                 arxiv_id,
-                title,
-                doi,
             )
             response.raise_for_status()
         return categories
