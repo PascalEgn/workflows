@@ -108,6 +108,10 @@ class ElsevierParser(IParser):
                 destination="journal_doctype",
                 extraction_function=self._get_journal_doctype,
             ),
+            CustomExtractor(
+                destination="data_availability",
+                extraction_function=self._get_data_availability,
+            ),
         ]
         super().__init__(extractors)
 
@@ -254,3 +258,32 @@ class ElsevierParser(IParser):
             )
         except Exception:
             logger.error("Unknown error for article %s", self.dois)
+
+    def _get_data_availability(self, article):
+        data_availability_node = article.find(".//data-availability")
+        result = {"statement": None, "urls": None}
+
+        if data_availability_node:
+            statement_parts = []
+            for para in data_availability_node.findall("para"):
+                para_text = extract_text(
+                    article=para,
+                    path=".",
+                    field_name="data_availability_statement",
+                    dois=self.dois,
+                )
+                if para_text:
+                    statement_parts.append(para_text)
+
+            urls = []
+            for inter_ref in data_availability_node.findall(".//inter-ref"):
+                url = inter_ref.get("{http://www.w3.org/1999/xlink}href")
+                if url:
+                    urls.append(url)
+
+            if statement_parts:
+                result["statement"] = " ".join(statement_parts)
+            if urls:
+                result["urls"] = urls
+
+        return result if result else None

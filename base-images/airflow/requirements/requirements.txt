@@ -12,3 +12,4 @@ jsonschema
 plyvel
 country_converter
 inspire-utils
+docling==2.74.0

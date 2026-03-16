@@ -12612,3 +12612,47 @@ def test_wrong_namespaces(shared_datadir, parser):
     with open(shared_datadir / "no_namespaces_expected.json") as file:
         expected_article = json.loads(file.read())
     assert parsed_article == expected_article
+
+
+def test_data_available(shared_datadir, parser):
+    with open(shared_datadir / "main_rjjlr.xml", "rb") as file:
+        xml_content_bytes = BytesIO(file.read())
+        article = parse_without_names_spaces(xml_content_bytes)
+        parsed_article = parser._publisher_specific_parsing(article)
+
+    expected_result = {
+        "data_availability": {
+            "statement": "This manuscript has associated data in a HEPData repository at ",
+            "urls": ["https://www.hepdata.net/"],
+        }
+    }
+    assert "data_availability" in parsed_article
+    assert parsed_article["data_availability"] == expected_result["data_availability"]
+
+
+def test_no_data_available(shared_datadir, parser):
+    with open(shared_datadir / "main.xml", "rb") as file:
+        xml_content_bytes = BytesIO(file.read())
+        article = parse_without_names_spaces(xml_content_bytes)
+        parsed_article = parser._publisher_specific_parsing(article)
+
+    expected_result = {
+        "data_availability": {
+            "statement": "No data was used for the research described in the article.",
+            "urls": None,
+        }
+    }
+    assert "data_availability" in parsed_article
+    assert parsed_article["data_availability"] == expected_result["data_availability"]
+
+
+def test_no_data_availability_statement(shared_datadir, parser):
+    with open(shared_datadir / "main2.xml", "rb") as file:
+        xml_content_bytes = BytesIO(file.read())
+        article = parse_without_names_spaces(xml_content_bytes)
+        parsed_article = parser._publisher_specific_parsing(article)
+
+    expected_result = {"data_availability": {"statement": None, "urls": None}}
+
+    assert "data_availability" in parsed_article
+    assert parsed_article["data_availability"] == expected_result["data_availability"]

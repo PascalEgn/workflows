@@ -1,13 +1,9 @@
 import base64
-import datetime
 import xml.etree.ElementTree as ET
 from zipfile import ZipFile
 
 import pytest
-from airflow.models import DagBag, DagModel
-from airflow.utils.state import DagRunState
-from busypie import SECOND, wait
-from common.utils import check_dagrun_state
+from airflow.models import DagBag
 from freezegun import freeze_time
 from springer.springer_process_file import (
     springer_enhance_file,
@@ -42,47 +38,50 @@ def article():
             return xmls_content[0]
 
     article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
+    return article
 
+
+@pytest.fixture
+def jhep_data_article():
+    data_dir = "./data/springer/JHEP/"
+    test_file = "ftp_PUB_26-02-19_08-01-28_data.zip"
+
+    def extract_zip_to_article(zip_filename):
+        with ZipFile(zip_filename, "r") as zip_file:
+            xmls = [
+                file.filename
+                for file in zip_file.filelist
+                if ".Meta" in file.filename or ".scoap" in file.filename
+            ]
+            xmls_content = [zip_file.read(xml) for xml in xmls]
+            return xmls_content[0]
+
+    article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
+    return article
+
+
+@pytest.fixture
+def epjc_data_article():
+    data_dir = "./data/springer/EPJC/"
+    test_file = "ftp_PUB_26-01-26_08-01-27_data.zip"
+
+    def extract_zip_to_article(zip_filename):
+        with ZipFile(zip_filename, "r") as zip_file:
+            xmls = [
+                file.filename
+                for file in zip_file.filelist
+                if ".Meta" in file.filename or ".scoap" in file.filename
+            ]
+            xmls_content = [zip_file.read(xml) for xml in xmls]
+            return xmls_content[0]
+
+    article = ET.fromstring(extract_zip_to_article(data_dir + test_file))
     return article
 
 
 def test_dag_loaded(dag):
     assert dag is not None
     assert len(dag.tasks) == 7
-
-
-@pytest.mark.skip(reason="It does not test anything.")
-def test_dag_run(dag, dag_was_paused, article):
-    dag_run_id = datetime.datetime.utcnow().strftime(
-        "test_springer_dag_process_file_%Y-%m-%dT%H:%M:%S.%f%z"
-    )
-    if dag.get_is_paused():
-        DagModel.get_dagmodel(dag.dag_id).set_is_paused(is_paused=False)
-    dagrun = dag.create_dagrun(
-        DagRunState.QUEUED,
-        run_id=dag_run_id,
-        conf={"file": base64.b64encode(ET.tostring(article)).decode()},
-    )
-    wait().at_most(60, SECOND).until(
-        lambda: check_dagrun_state(dagrun, not_allowed_states=["queued", "running"])
-    )
-    if dag_was_paused:
-        DagModel.get_dagmodel(dag.dag_id).set_is_paused(is_paused=True)
-
-
-@pytest.mark.skip(reason="It does not test anything.")
-def test_dag_run_no_input_file(dag, dag_was_paused):
-    if dag.get_is_paused():
-        DagModel.get_dagmodel(dag.dag_id).set_is_paused(is_paused=False)
-    dag_run_id = datetime.datetime.utcnow().strftime(
-        "test_springer_dag_process_file_%Y-%m-%dT%H:%M:%S.%f%z"
-    )
-    dagrun = dag.create_dagrun(DagRunState.QUEUED, run_id=dag_run_id)
-    wait().at_most(60, SECOND).until(
-        lambda: check_dagrun_state(dagrun, not_allowed_states=["failed"])
-    )
-    if dag_was_paused:
-        DagModel.get_dagmodel(dag.dag_id).set_is_paused(is_paused=True)
 
 
 publisher = "Springer"
@@ -282,3 +281,38 @@ def test_dag_validate_file_fails(article):
 def test_dag_process_file_no_input_file(article):
     with pytest.raises(Exception, match="There was no 'file' parameter. Exiting run."):
         springer_parse_file()
+
+
+def test_extract_data_availability_data(dag, epjc_data_article):
+    expected = {
+        "statement": "This manuscript has associated data in a data repository. [Authors' comment: The public release of data supporting the findings of this article will follow the CERN Open Data Policy [124]. Inquiries about plots and tables associated with this article can be addressed to atlas.publications@cern.ch.]\nThismanuscripthasassociatedcode/software in a data repository. [Authors' comment: The ATLAS Collaboration's Athena software, including the configuration of the event generators, is open source (https://gitlab.cern.ch/atlas/athena).]",
+        "urls": [
+            "https://gitlab.cern.ch/atlas/athena).]",
+        ],
+    }
+    result = dag.test(
+        run_conf={
+            "file": base64.b64encode(ET.tostring(epjc_data_article)).decode(),
+            "file_name": "extracted/EPJC/ftp_PUB_26-01-26_08-01-27_data/JOU=10052/VOL=2026.86/ISU=1/ART=15241/10052_2025_Article_15241.xml.Meta",
+        },
+        mark_success_pattern="save_to_s3|create_or_update",
+    )
+    result = result.get_task_instance("enrich_file").xcom_pull()
+    assert "data_availability" in result
+    assert result["data_availability"] == expected
+
+
+def test_extract_data_availability_no_data(dag, jhep_data_article):
+    expected = {
+        "statement": "This article has no associated data or the data will not be deposited.\nThis article has no associated code or the code will not be deposited.",
+    }
+    result = dag.test(
+        run_conf={
+            "file": base64.b64encode(ET.tostring(jhep_data_article)).decode(),
+            "file_name": "extracted/JHEP/ftp_PUB_26-02-19_08-01-28_data/JOU=13130/VOL=2026.2026/ISU=2/ART=28203/13130_2026_Article_28203.xml.scoap",
+        },
+        mark_success_pattern="save_to_s3|create_or_update",
+    )
+    result = result.get_task_instance("enrich_file").xcom_pull()
+    assert "data_availability" in result
+    assert result["data_availability"] == expected

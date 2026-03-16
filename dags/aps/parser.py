@@ -3,6 +3,7 @@ import re
 
 from common.parsing.json_extractors import CustomExtractor, NestedValueExtractor
 from common.parsing.parser import IParser
+from common.parsing.xml_extractors import CustomExtractor as XMLCustomExtractor
 from common.utils import construct_license
 from inspire_utils.record import get_value
 
@@ -158,3 +159,118 @@ class APSParser(IParser):
             return licenses
         except Exception:
             logger.error("Error was raised while parsing licenses.")
+
+
+class APSXMLParser(IParser):
+    def __init__(self):
+        extractors = [
+            XMLCustomExtractor("authors", self._get_authors),
+            XMLCustomExtractor("data_availability", self._get_data_availability),
+        ]
+        super().__init__(extractors)
+
+    def _get_affiliations(self, article, contrib):
+        affiliations = []
+
+        xref_elements = contrib.findall(".//xref[@ref-type='aff']")
+
+        if not xref_elements:
+            logger.info("No affiliations found for this author.")
+            return affiliations
+
+        for xref in xref_elements:
+            ref_ids = list(xref.get("rid").split(" "))
+            for ref_id in ref_ids:
+                affiliation_node = article.find(f".//aff[@id='{ref_id}']")
+
+                if affiliation_node is not None:
+                    full_text_parts = []
+                    ror = None
+
+                    for child in affiliation_node.iter():
+                        if (
+                            child.tag == "institution-id"
+                            and child.get("institution-id-type") == "ror"
+                        ):
+                            ror = child.text
+                        elif (
+                            child.tag not in ["label", "sup", "institution-id"]
+                            and child.text
+                        ):
+                            full_text_parts.append(child.text.strip())
+                        if child.tail:
+                            full_text_parts.append(child.tail.strip())
+
+                    raw_aff_text = " ".join(filter(None, full_text_parts))
+                    aff_text = re.sub(r"\s*,\s*,*", ", ", raw_aff_text)
+                    aff_text = re.sub(r"\s+", " ", aff_text).strip()
+
+                    affiliations.append({"value": aff_text, "ror": ror})
+                else:
+                    logger.info(f"Affiliation with id '{ref_id}' not found.")
+
+        return affiliations
+
+    def _get_authors(self, article):
+        authors = []
+
+        contrib_group = article.find("./front/article-meta/contrib-group")
+        if contrib_group is None:
+            return authors
+
+        for contrib in contrib_group.findall("./contrib[@contrib-type='author']"):
+            author = {}
+
+            name = contrib.find("./name")
+            if name is not None:
+                given_names = name.find("given-names")
+                surname = name.find("surname")
+                author["given_names"] = (
+                    given_names.text if given_names is not None else ""
+                )
+                author["surname"] = surname.text if surname is not None else ""
+                author["full_name"] = (
+                    f"{author['given_names']} {author['surname']}".strip()
+                )
+
+            orcid = contrib.find("./contrib-id[@contrib-id-type='orcid']")
+            if orcid is not None:
+                author["orcid"] = orcid.text.strip() if orcid.text else None
+
+            author["affiliations"] = self._get_affiliations(article, contrib)
+
+            authors.append(author)
+
+        return authors
+
+    def _get_data_availability(self, article):
+        data_availability_sec = article.find(".//sec[@sec-type='data-availability']")
+        result = {"statement": None, "urls": None}
+
+        statement_parts = []
+        for p in data_availability_sec.findall(".//p"):
+            if p.text:
+                statement_parts.append(p.text.strip())
+            for elem in p:
+                if elem.tail:
+                    statement_parts.append(elem.tail.strip())
+        statement = " ".join(filter(None, statement_parts))
+
+        urls = []
+        xref_elements = data_availability_sec.findall(".//xref[@ref-type='bibr']")
+
+        for xref in xref_elements:
+            ref_ids = xref.get("rid").split(" ")
+            for ref_id in ref_ids:
+                ref_element = article.find(f".//ref[@id='{ref_id}']")
+                if ref_element is not None:
+                    for pub_id in ref_element.findall(".//pub-id"):
+                        if pub_id.text:
+                            urls.append(pub_id.text.strip())
+
+        if statement:
+            result["statement"] = statement
+        if urls:
+            result["urls"] = urls
+
+        return result if result else None
