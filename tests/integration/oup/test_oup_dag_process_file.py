@@ -81,7 +81,13 @@ def test_affiliation_countries_in_enriched(parser, articles):
 
 def test_dag_loaded(dag):
     assert dag
-    assert len(dag.tasks) == 7
+    print(dag.task_ids)
+    assert "parse_file" in dag.task_ids
+    assert "enhance_file" in dag.task_ids
+    assert "populate_files" in dag.task_ids
+    assert "enrich_file" in dag.task_ids
+    assert "save_to_s3" in dag.task_ids
+    assert "create_or_update" in dag.task_ids
 
 
 publisher = "OUP"

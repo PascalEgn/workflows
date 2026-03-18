@@ -20,6 +20,11 @@ REPO_FIND_ALL_RETURN_VALUE: list[dict] = [
 ]
 
 
+class TestRepository(IRepository):
+    ZIPED_DIR = "raw/"
+    EXTRACTED_DIR = "extracted/"
+
+
 @pytest.fixture
 def zip_fixture():
     with patch("zipfile.ZipFile", autospec=True) as zip_patch:
@@ -56,7 +61,7 @@ def test_migrate_from_ftp(
     zip_fixture,
 ):
     with SFTPService() as sftp:
-        repo = IRepository()
+        repo = TestRepository()
         migrate_from_ftp(
             sftp,
             repo,
@@ -90,7 +95,7 @@ def test_migrate_from_ftp_only_one_file(
     ftp_get_file_fixture,
 ):
     with SFTPService() as sftp:
-        repo = IRepository()
+        repo = TestRepository()
         migrate_from_ftp(
             sftp,
             repo,
@@ -127,7 +132,7 @@ def test_migrate_from_ftp_only_one_file_but_force_flag(
     zip_fixture,
 ):
     with SFTPService() as sftp:
-        repo = IRepository()
+        repo = TestRepository()
         repo_get_all.return_value = SFTP_ZIP_FILES[0:-1]
         migrate_from_ftp(
             sftp,
@@ -164,7 +169,7 @@ def test_migrate_from_ftp_specified_file_force_from_ftp(
 ):
     repo_get_all.return_value = SFTP_ZIP_FILES[0:-1]
     with SFTPService() as sftp:
-        repo = IRepository()
+        repo = TestRepository()
         migrate_from_ftp(
             sftp,
             repo,
@@ -203,7 +208,7 @@ def test_migrate_from_ftp_specified_file(
     zip_fixture,
 ):
     repo_get_all.return_value = SFTP_ZIP_FILES[0:-1]
-    repo = IRepository()
+    repo = TestRepository()
     reprocess_files(
         repo,
         get_logger().bind(class_name="test_logger"),
@@ -231,7 +236,7 @@ def test_migrate_from_ftp_specified_file(
     return_value=[{"xml": f} for f in SFTP_LIST_FILES_RETURN_VALUE],
 )
 def test_trigger_file_processing(repo_find_all, repo_get_by_id):
-    repo = IRepository()
+    repo = TestRepository()
     confs = trigger_file_processing(
         "test", repo, get_logger().bind(class_name="test_logger")
     )

@@ -36,12 +36,12 @@ def migrate_files(
                     repo.save(s3_filename, io.BytesIO(archive_file_content))
                     if repo.is_meta(s3_filename):
                         extracted_or_downloaded_filenames.append(
-                            os.path.join("extracted/", s3_filename)
+                            os.path.join(repo.EXTRACTED_DIR, s3_filename)
                         )
                 repo.save(archive_name, file_bytes)
             else:
                 extracted_or_downloaded_filenames.append(
-                    os.path.join("raw", archive_name)
+                    os.path.join(repo.ZIPED_DIR, archive_name)
                 )
                 repo.save(archive_name, file_bytes)
 
@@ -113,13 +113,13 @@ def _filenames_pull(
 def _find_files_in_zip(filenames, repo):
     extracted_filenames = []
     for zipped_filename in filenames:
-        zipped_file = repo.get_by_id(f"raw/{zipped_filename}")
+        zipped_file = repo.get_by_id(f"{repo.ZIPED_DIR}{zipped_filename}")
         with zipfile.ZipFile(zipped_file) as zip:
             for zip_filename in zip.namelist():
                 if repo.is_meta(zip_filename):
                     filename_without_extension = zipped_filename.split(".")[0]
                     extracted_filenames.append(
-                        f"extracted/{filename_without_extension}/{zip_filename}"
+                        f"{repo.EXTRACTED_DIR}{filename_without_extension}/{zip_filename}"
                     )
     return extracted_filenames
 
