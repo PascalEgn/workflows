@@ -19,7 +19,7 @@ class OUPRepository(IRepository):
 
     def get_all_raw_filenames(self):
         return [
-            os.path.basename(f.key)
+            f.key.removeprefix(self.ZIPED_DIR)
             for f in self.s3.objects.filter(Prefix=self.ZIPED_DIR).all()
         ]
 
