@@ -320,6 +320,7 @@ def test_extract_data_availability_data(
         run_conf={
             "file": base64.b64encode(ET.tostring(epjc_data_article)).decode(),
             "file_name": "extracted/EPJC/ftp_PUB_26-01-26_08-01-27_data/JOU=10052/VOL=2026.86/ISU=1/ART=15241/10052_2025_Article_15241.xml.Meta",
+            "parse_pdf": True,
         },
         mark_success_pattern="save_to_s3|create_or_update",
     )
@@ -338,9 +339,24 @@ def test_extract_data_availability_no_data(
         run_conf={
             "file": base64.b64encode(ET.tostring(jhep_data_article)).decode(),
             "file_name": "extracted/JHEP/ftp_PUB_26-02-19_08-01-28_data/JOU=13130/VOL=2026.2026/ISU=2/ART=28203/13130_2026_Article_28203.xml.scoap",
+            "parse_pdf": True,
         },
         mark_success_pattern="save_to_s3|create_or_update",
     )
     result = result.get_task_instance("enrich_file").xcom_pull()
     assert "data_availability" in result
     assert result["data_availability"] == expected
+
+
+def test_extract_data_availability_disabled_by_default(
+    dag, epjc_data_article, springer_data_files_in_s3
+):
+    result = dag.test(
+        run_conf={
+            "file": base64.b64encode(ET.tostring(epjc_data_article)).decode(),
+            "file_name": "extracted/EPJC/ftp_PUB_26-01-26_08-01-27_data/JOU=10052/VOL=2026.86/ISU=1/ART=15241/10052_2025_Article_15241.xml.Meta",
+        },
+        mark_success_pattern="save_to_s3|create_or_update",
+    )
+    result = result.get_task_instance("enrich_file").xcom_pull()
+    assert "data_availability" not in result

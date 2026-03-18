@@ -1,4 +1,5 @@
 import base64
+import importlib
 import logging
 import os
 import xml.etree.ElementTree as ET
@@ -6,7 +7,7 @@ from io import BytesIO
 
 import pendulum
 import requests
-from airflow.sdk import dag, task
+from airflow.sdk import Param, dag, get_current_context, task
 from common.cleanup import (
     clean_inline_expressions,
     clean_whitespace_characters,
@@ -23,9 +24,6 @@ from common.utils import (
     remove_xml_namespaces,
     upload_json_to_s3,
 )
-from docling.datamodel.base_models import DocumentStream
-from docling.document_converter import DocumentConverter
-from docling.exceptions import ConversionError
 from inspire_utils.record import get_value
 from jsonschema import validate
 from springer.parser import SpringerParser, SpringerPDFParser
@@ -46,14 +44,22 @@ def process_xml(input):
 
 
 def extract_text_from_pdf(pdf_stream: BytesIO, filename: str) -> str:
+    document_stream_module = importlib.import_module("docling.datamodel.base_models")
+    document_converter_module = importlib.import_module("docling.document_converter")
+    conversion_error_module = importlib.import_module("docling.exceptions")
+
+    document_stream_class = document_stream_module.DocumentStream
+    document_converter_class = document_converter_module.DocumentConverter
+    conversion_error_class = conversion_error_module.ConversionError
+
     try:
-        converter = DocumentConverter()
-        doc_stream = DocumentStream(
+        converter = document_converter_class()
+        doc_stream = document_stream_class(
             stream=pdf_stream, name=filename, mime_type="application/pdf"
         )
         doc = converter.convert(doc_stream).document
         return doc.export_to_markdown(labels={"text"})
-    except ConversionError as e:
+    except conversion_error_class as e:
         logger.error("There was an issue exporting the PDF %s", e)
         return None
 
@@ -98,6 +104,13 @@ def springer_validate_record(enriched_file):
     schedule=None,
     tags=["process", "springer"],
     start_date=pendulum.today("UTC").add(days=-1),
+    params={
+        "parse_pdf": Param(
+            False,
+            type="boolean",
+            description="Enable PDF parsing to populate data availability fields.",
+        ),
+    },
 )
 def springer_process_file():
     s3_client = SpringerRepository()
@@ -108,6 +121,13 @@ def springer_process_file():
 
     @task()
     def add_data_availability(parsed_file):
+        ctx = get_current_context()
+        if not ctx["params"].get("parse_pdf", False):
+            logger.warning(
+                "PDF parsing disabled. Skipping data availability extraction"
+            )
+            return parsed_file
+
         pdfa_path = parsed_file.get("files", {}).get("pdfa")
         if not pdfa_path:
             logger.info("No pdfa path found. Skipping pdf parsing")
