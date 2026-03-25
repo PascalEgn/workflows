@@ -1,5 +1,6 @@
 import logging
 import os
+from io import BytesIO
 from uuid import uuid4
 
 import requests
@@ -75,6 +76,13 @@ class Scoap3Repository(IRepository):
                     path,
                 )
         return copied_files
+
+    def get_by_id(self, id):
+        key = id.removeprefix(f"{self.bucket}/")
+        retfile = BytesIO()
+        self.s3.download_fileobj(key, retfile)
+        retfile.seek(0)
+        return retfile
 
     def download_files(self, files, prefix=None):
         if not prefix:

@@ -1,5 +1,6 @@
 import json
 import logging
+import xml.etree.ElementTree as ET
 
 import pendulum
 from airflow.sdk import Param, dag, get_current_context, task
@@ -93,13 +94,26 @@ def aps_process_file():
         return parsed_file
 
     @task()
-    def parse_xml(xml_file):
+    def parse_xml(parsed_file):
+        xml_path = parsed_file.get("files", {}).get("xml")
+        if not xml_path:
+            logger.warning("No XML file found for parsing.")
+            return {}
+
+        s3_scoap3_client = Scoap3Repository()
+        xml_bytes = s3_scoap3_client.get_by_id(xml_path).getvalue()
+        xml_content = xml_bytes.decode("utf-8")
+
+        logger.info("Parsing XML file: %s", xml_path)
         parser = APSXMLParser()
-        parsed = parser.parse(xml_file)
+        parsed = parser.parse(ET.fromstring(xml_content))
         return parsed
 
-    @task()
-    def replace_authors_with_xml_authors(parsed_json, parsed_xml):
+    @task(task_id="replace_authors_with_xml_authors")
+    def task_replace_authors_with_xml_authors(parsed_json, parsed_xml):
+        if not parsed_xml:
+            logger.warning("No parsed XML data available for author replacement.")
+            return parsed_json
         ctx = get_current_context()
         return replace_authors_with_xml_authors(
             parsed_json,
@@ -109,10 +123,12 @@ def aps_process_file():
             ],
         )
 
-    @task()
-    def add_data_availability(parsed_json, parsed_xml):
-        parsed_json["data_availability"] = parsed_xml["data_availability"]
-        return parsed_json
+    @task(task_id="add_data_availability")
+    def task_add_data_availability(parsed_json, parsed_xml):
+        if not parsed_xml:
+            logger.warning("No parsed XML data available for adding data availability.")
+            return parsed_json
+        return add_data_availability(parsed_json, parsed_xml)
 
     @task()
     def save_to_s3(complete_file):
@@ -126,9 +142,11 @@ def aps_process_file():
     enhanced_file = enhance(parsed_file)
     enhanced_file_with_files = populate_files(enhanced_file)
     enriched_file = enrich(enhanced_file_with_files)
-    parsed_xml = parse_xml(enriched_file["files"]["xml"])
-    replaced_authors_file = replace_authors_with_xml_authors(enriched_file, parsed_xml)
-    complete_file = add_data_availability(replaced_authors_file, parsed_xml)
+    parsed_xml = parse_xml(enriched_file)
+    replaced_authors_file = task_replace_authors_with_xml_authors(
+        enriched_file, parsed_xml
+    )
+    complete_file = task_add_data_availability(replaced_authors_file, parsed_xml)
     save_to_s3(complete_file)
     create_or_update(complete_file)
 
