@@ -4,4 +4,5 @@ apache-airflow[celery, postgres, redis, cncf.kubernetes, sentry, amazon, fab]==3
 apache-airflow-providers-fab
 flask-appbuilder
 flask-session
+Authlib
 git+https://github.com/cern-sis/airflow-elasticsearch-provider

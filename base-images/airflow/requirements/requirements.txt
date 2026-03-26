@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 structlog==25.5.0
 SQLAlchemy==2.0.44
 paramiko
@@ -12,4 +13,4 @@ jsonschema
 plyvel
 country_converter
 inspire-utils
-docling==2.74.0
+docling
