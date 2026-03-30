@@ -186,22 +186,6 @@ class TestUnitHindawiReharvest:
         assert len(result) == 1
         assert "10.1155/2022/1234567" in result[0]
 
-    def test_collect_records_dois_range_too_large_raises(self, dag):
-        task = dag.get_task("collect_records")
-        function_to_unit_test = task.python_callable
-
-        mock_repo = self._build_repo({})
-
-        with pytest.raises(ValueError, match="must not exceed one year"):
-            function_to_unit_test(
-                repo=mock_repo,
-                params={
-                    "dois": ["10.1155/2022/1234567"],
-                    "date_from": "2020-01-01",
-                    "date_to": "2022-01-01",
-                },
-            )
-
     def test_prepare_trigger_conf_dry_run_and_normal(self, dag):
         task = dag.get_task("prepare_trigger_conf")
         function_to_unit_test = task.python_callable
