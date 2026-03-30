@@ -157,7 +157,7 @@ def _enforce_limit(records, limit):
             type=["array", "null"],
             description=(
                 "List of DOIs to process. Can be used with date_from/date_to or "
-                "together with file_keys to filter the resolved key set."
+                "together with file_keys to filter the resolved key set. The maximum date range is 1 Year."
             ),
             title="DOIs",
         ),
