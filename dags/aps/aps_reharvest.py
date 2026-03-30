@@ -129,7 +129,7 @@ def _resolve_file_keys(file_keys, all_snapshot_keys):
         "dois": Param(
             default=[],
             type=["array", "null"],
-            description="List of DOIs to process",
+            description="List of DOIs to process. This will only search for records from the last 3 years, if date_from/date_to are not provided.",
             title="DOIs",
         ),
         "limit": Param(
@@ -195,13 +195,8 @@ def aps_reharvest():
         elif dois:
             if not date_from and not date_to:
                 date_to = date.today()
-                date_from = date_to - timedelta(days=365)
+                date_from = date_to - timedelta(days=365 * 3)
 
-            if (date_to - date_from).days > 366:
-                raise ValueError(
-                    "For DOI search the date range must not exceed one year. "
-                    "Please use a smaller range."
-                )
             logger.info(
                 "Selecting APS snapshot files for DOI search in date range %s to %s",
                 date_from,

@@ -212,22 +212,6 @@ class TestUnitApsReharvest:
         assert len(result) == 1
         assert result[0]["identifiers"]["doi"] == "10.1103/found"
 
-    def test_collect_articles_dois_range_too_large_raises(self, dag):
-        task = dag.get_task("collect_articles")
-        function_to_unit_test = task.python_callable
-
-        mock_repo = self._build_repo({})
-
-        with pytest.raises(ValueError, match="must not exceed one year"):
-            function_to_unit_test(
-                repo=mock_repo,
-                params={
-                    "dois": ["10.1103/x"],
-                    "date_from": "2024-01-01",
-                    "date_to": "2026-01-01",
-                },
-            )
-
     def test_prepare_trigger_conf_dry_run_and_normal(self, dag):
         task = dag.get_task("prepare_trigger_conf")
         function_to_unit_test = task.python_callable
