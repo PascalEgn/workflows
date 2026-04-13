@@ -245,6 +245,9 @@ class APSXMLParser(IParser):
 
     def _get_data_availability(self, article):
         data_availability_sec = article.find(".//sec[@sec-type='data-availability']")
+        if data_availability_sec is None:
+            return None
+
         result = {"statement": None, "urls": None}
 
         statement_parts = []
@@ -260,7 +263,10 @@ class APSXMLParser(IParser):
         xref_elements = data_availability_sec.findall(".//xref[@ref-type='bibr']")
 
         for xref in xref_elements:
-            ref_ids = xref.get("rid").split(" ")
+            rid_value = xref.get("rid")
+            if not rid_value:
+                continue
+            ref_ids = rid_value.split(" ")
             for ref_id in ref_ids:
                 ref_element = article.find(f".//ref[@id='{ref_id}']")
                 if ref_element is not None:
@@ -273,4 +279,4 @@ class APSXMLParser(IParser):
         if urls:
             result["urls"] = urls
 
-        return result if result else None
+        return result if any(result.values()) else None
