@@ -121,7 +121,7 @@ class APSParser(IParser):
                 "ror": self.extract_organization_and_ror(affiliation["name"])[1],
             }
             for affiliation in article["affiliations"]
-            if affiliation["id"] in affiliationIds
+            if affiliation.get("id") in affiliationIds
         ]
         return parsed_affiliations
 
