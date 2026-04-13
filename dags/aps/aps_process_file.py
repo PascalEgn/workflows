@@ -42,7 +42,7 @@ def replace_authors_with_xml_authors(
 
 
 def add_data_availability(parsed_json, parsed_xml):
-    parsed_json["data_availability"] = parsed_xml["data_availability"]
+    parsed_json["data_availability"] = parsed_xml.get("data_availability")
     return parsed_json
 
 
