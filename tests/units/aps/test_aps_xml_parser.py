@@ -147,3 +147,97 @@ def test_data_available(data_article):
 
     assert "data_availability" in data_article
     assert data_article["data_availability"] == expected_results["data_availability"]
+
+
+def test_authors_multiple_contrib_groups(parser):
+    article = ET.fromstring(
+        """
+        <article>
+            <front>
+                <article-meta>
+                    <contrib-group>
+                        <contrib contrib-type="author">
+                            <name>
+                                <surname>Kundu</surname>
+                                <given-names>Anirban</given-names>
+                            </name>
+                            <xref ref-type="aff" rid="a1" />
+                        </contrib>
+                        <aff id="a1">
+                            <institution-wrap>
+                                <institution>University of Calcutta</institution>
+                                <institution-id institution-id-type="ror">https://ror.org/01e7v7w47</institution-id>
+                            </institution-wrap>
+                        </aff>
+                    </contrib-group>
+                    <contrib-group>
+                        <contrib contrib-type="author">
+                            <name>
+                                <surname>Mondal</surname>
+                                <given-names>Poulami</given-names>
+                            </name>
+                            <xref ref-type="aff" rid="a2" />
+                        </contrib>
+                        <aff id="a2">
+                            <institution-wrap>
+                                <institution>Indian Institute of Technology Kanpur</institution>
+                                <institution-id institution-id-type="ror">https://ror.org/05pjsgx75</institution-id>
+                            </institution-wrap>
+                        </aff>
+                    </contrib-group>
+                    <contrib-group>
+                        <contrib contrib-type="author">
+                            <name>
+                                <surname>Moultaka</surname>
+                                <given-names>Gilbert</given-names>
+                            </name>
+                            <xref ref-type="aff" rid="a3" />
+                        </contrib>
+                        <aff id="a3">
+                            <institution-wrap>
+                                <institution>Laboratoire Univers et Particules de Montpellier (LUPM)</institution>
+                                <institution-id institution-id-type="ror">https://ror.org/00nrbzg90</institution-id>
+                            </institution-wrap>
+                        </aff>
+                    </contrib-group>
+                </article-meta>
+            </front>
+        </article>
+        """
+    )
+
+    assert parser._get_authors(article) == [
+        {
+            "given_names": "Anirban",
+            "surname": "Kundu",
+            "full_name": "Anirban Kundu",
+            "affiliations": [
+                {
+                    "value": "University of Calcutta",
+                    "ror": "https://ror.org/01e7v7w47",
+                }
+            ],
+        },
+        {
+            "given_names": "Poulami",
+            "surname": "Mondal",
+            "full_name": "Poulami Mondal",
+            "affiliations": [
+                {
+                    "value": "Indian Institute of Technology Kanpur",
+                    "ror": "https://ror.org/05pjsgx75",
+                }
+            ],
+        },
+        {
+            "given_names": "Gilbert",
+            "surname": "Moultaka",
+            "full_name": "Gilbert Moultaka",
+            "affiliations": [
+                {
+                    "value": "Laboratoire Univers et Particules de Montpellier (LUPM)",
+                    "ror": "https://ror.org/00nrbzg90",
+                }
+            ],
+        },
+    ]

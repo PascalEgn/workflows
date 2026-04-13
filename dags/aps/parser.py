@@ -214,32 +214,33 @@ class APSXMLParser(IParser):
     def _get_authors(self, article):
         authors = []
 
-        contrib_group = article.find("./front/article-meta/contrib-group")
-        if contrib_group is None:
+        contrib_groups = article.findall("./front/article-meta/contrib-group")
+        if not contrib_groups:
             return authors
 
-        for contrib in contrib_group.findall("./contrib[@contrib-type='author']"):
-            author = {}
+        for contrib_group in contrib_groups:
+            for contrib in contrib_group.findall("./contrib[@contrib-type='author']"):
+                author = {}
 
-            name = contrib.find("./name")
-            if name is not None:
-                given_names = name.find("given-names")
-                surname = name.find("surname")
-                author["given_names"] = (
-                    given_names.text if given_names is not None else ""
-                )
-                author["surname"] = surname.text if surname is not None else ""
-                author["full_name"] = (
-                    f"{author['given_names']} {author['surname']}".strip()
-                )
+                name = contrib.find("./name")
+                if name is not None:
+                    given_names = name.find("given-names")
+                    surname = name.find("surname")
+                    author["given_names"] = (
+                        given_names.text if given_names is not None else ""
+                    )
+                    author["surname"] = surname.text if surname is not None else ""
+                    author["full_name"] = (
+                        f"{author['given_names']} {author['surname']}".strip()
+                    )
 
-            orcid = contrib.find("./contrib-id[@contrib-id-type='orcid']")
-            if orcid is not None:
-                author["orcid"] = orcid.text.strip() if orcid.text else None
+                orcid = contrib.find("./contrib-id[@contrib-id-type='orcid']")
+                if orcid is not None:
+                    author["orcid"] = orcid.text.strip() if orcid.text else None
 
-            author["affiliations"] = self._get_affiliations(article, contrib)
+                author["affiliations"] = self._get_affiliations(article, contrib)
 
-            authors.append(author)
+                authors.append(author)
 
         return authors
 
