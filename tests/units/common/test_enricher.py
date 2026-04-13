@@ -20,23 +20,10 @@ def test_get_arxiv_categories_arxiv_id(
     enricher, arxiv_output_content, requests_mock, assertListEqual
 ):
     requests_mock.get(
-        "http://export.arxiv.org/api/query?id_list=0000.00000",
+        "https://oaipmh.arxiv.org/oai?verb=GetRecord&identifier=oai:arXiv.org:0000.00000&metadataPrefix=arXiv",
         text=arxiv_output_content,
     )
     assertListEqual(
-        ["hep-ph", "astro-ph.HE", "astro-ph.IM", "hep-ex"],
+        ["hep-ph", "hep-th"],
         enricher._get_arxiv_categories(arxiv_id="0000.00000"),
-    )
-
-
-def test_get_arxiv_categories_title(
-    enricher, arxiv_output_content, requests_mock, assertListEqual
-):
-    requests_mock.get(
-        'http://export.arxiv.org/api/query?search_query=ti:"test+title"',
-        text=arxiv_output_content,
-    )
-    assertListEqual(
-        ["hep-ph", "astro-ph.HE", "astro-ph.IM", "hep-ex"],
-        enricher._get_arxiv_categories(title="test title"),
     )

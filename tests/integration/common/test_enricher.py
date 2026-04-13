@@ -15,16 +15,6 @@ def test_get_arxiv_categories_arxiv_id(enricher, assertListEqual):
 
 
 @pytest.mark.vcr
-def test_get_arxiv_categories_title(enricher, assertListEqual):
-    assertListEqual(
-        ["hep-ex"],
-        enricher._get_arxiv_categories(
-            title="A strategy for a general search for new phenomena using data-derived signal regions and its application within the ATLAS experiment"
-        ),
-    )
-
-
-@pytest.mark.vcr
 def test_enricher(enricher, assertListEqual):
     input_article = {
         "arxiv_eprints": [{"value": "2112.01211"}],
