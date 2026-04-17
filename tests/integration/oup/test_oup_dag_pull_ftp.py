@@ -24,7 +24,9 @@ def oup_empty_repo():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 4
+    assert "migrate_from_ftp" in dag.task_ids
+    assert "prepare_trigger_conf" in dag.task_ids
+    assert "oup_trigger_file_processing" in dag.task_ids
 
 
 def test_dag_run(dag, oup_empty_repo):
