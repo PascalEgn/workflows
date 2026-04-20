@@ -28,7 +28,7 @@ jobs:
       - name: send event
         uses: cern-sis/gh-workflows/.github/actions/kubernetes-project-new-images@v6.3.1
         with:
-          event-type: update
+          event-type: release
           repo: cern-sis/kubernetes-airflow
           images: |
             cern-sis/scoap3/workflows-prod@${{ needs.build-and-push.outputs.image-id }}
