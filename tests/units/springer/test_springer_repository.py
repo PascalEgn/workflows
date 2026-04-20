@@ -64,7 +64,7 @@ def test_save_zip_file(boto3_fixture):
     filename = "test.zip"
     repo = SpringerRepository()
     repo.save(filename, file)
-    upload_mock.assert_called_with(file, repo.ZIPED_DIR + filename)
+    upload_mock.assert_called_with(file, repo.RAW_DIR + filename)
 
 
 def test_save_file(boto3_fixture):
