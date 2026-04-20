@@ -20,7 +20,7 @@ class IOPRepository(IRepository):
 
     def get_all_raw_filenames(self):
         return [
-            f.key.removeprefix("raw/")
+            f.key.removeprefix(self.ZIPED_DIR)
             for f in self.s3.objects.filter(Prefix=self.ZIPED_DIR).all()
         ]
 
@@ -31,6 +31,8 @@ class IOPRepository(IRepository):
             if filenames_to_process
             else self.__find_all_extracted_files()
         )
+        if not filenames:
+            return []
         for file in filenames:
             last_part = os.path.basename(file)
             filename_without_extension = last_part.split(".")[0]
