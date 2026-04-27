@@ -42,75 +42,29 @@ def test_authors(no_data_article):
                 "given_names": "L.",
                 "surname": "Nađđerđ",
                 "full_name": "L. Nađđerđ",
-                "affiliations": [
-                    {
-                        "value": "—National Institute of the Republic of Serbia, Vinča Institute of Nuclear Sciences, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia University of Belgrade",
-                        "ror": "https://ror.org/02qsmb048",
-                    },
-                    {
-                        "value": "Strong Coupling Physics International Research Laboratory, Huzhou, Zhejiang 313000, People's Republic of China Huzhou University",
-                        "ror": "https://ror.org/04mvpxy20",
-                    },
-                ],
             },
             {
                 "given_names": "J.",
                 "surname": "Milošević",
                 "full_name": "J. Milošević",
                 "orcid": "https://orcid.org/0000-0001-8486-4604",
-                "affiliations": [
-                    {
-                        "value": "—National Institute of the Republic of Serbia, Vinča Institute of Nuclear Sciences, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia University of Belgrade",
-                        "ror": "https://ror.org/02qsmb048",
-                    },
-                    {
-                        "value": "Strong Coupling Physics International Research Laboratory, Huzhou, Zhejiang 313000, People's Republic of China Huzhou University",
-                        "ror": "https://ror.org/04mvpxy20",
-                    },
-                ],
             },
             {
                 "given_names": "D.",
                 "surname": "Devetak",
                 "full_name": "D. Devetak",
                 "orcid": "https://orcid.org/0000-0002-4450-2390",
-                "affiliations": [
-                    {
-                        "value": "—National Institute of the Republic of Serbia, Vinča Institute of Nuclear Sciences, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia University of Belgrade",
-                        "ror": "https://ror.org/02qsmb048",
-                    },
-                    {
-                        "value": "Strong Coupling Physics International Research Laboratory, Huzhou, Zhejiang 313000, People's Republic of China Huzhou University",
-                        "ror": "https://ror.org/04mvpxy20",
-                    },
-                ],
             },
             {
                 "given_names": "F.",
                 "surname": "Wang",
                 "full_name": "F. Wang",
                 "orcid": "https://orcid.org/0000-0002-8313-0809",
-                "affiliations": [
-                    {
-                        "value": "Department of Physics and Astronomy, Indiana 47907, USA Purdue University",
-                        "ror": "https://ror.org/02dqehb95",
-                    }
-                ],
             },
             {
                 "given_names": "X.",
                 "surname": "Zhu",
                 "full_name": "X. Zhu",
-                "affiliations": [
-                    {
-                        "value": "Strong Coupling Physics International Research Laboratory, Huzhou, Zhejiang 313000, People's Republic of China Huzhou University",
-                        "ror": "https://ror.org/04mvpxy20",
-                    },
-                    {
-                        "value": "College of Science, Huzhou, Zhejiang 313000, People's Republic of China Huzhou University",
-                        "ror": "https://ror.org/04mvpxy20",
-                    },
-                ],
             },
         ]
     }
@@ -211,33 +165,15 @@ def test_authors_multiple_contrib_groups(parser):
             "given_names": "Anirban",
             "surname": "Kundu",
             "full_name": "Anirban Kundu",
-            "affiliations": [
-                {
-                    "value": "University of Calcutta",
-                    "ror": "https://ror.org/01e7v7w47",
-                }
-            ],
         },
         {
             "given_names": "Poulami",
             "surname": "Mondal",
             "full_name": "Poulami Mondal",
-            "affiliations": [
-                {
-                    "value": "Indian Institute of Technology Kanpur",
-                    "ror": "https://ror.org/05pjsgx75",
-                }
-            ],
         },
         {
             "given_names": "Gilbert",
             "surname": "Moultaka",
             "full_name": "Gilbert Moultaka",
-            "affiliations": [
-                {
-                    "value": "Laboratoire Univers et Particules de Montpellier (LUPM)",
-                    "ror": "https://ror.org/00nrbzg90",
-                }
-            ],
         },
     ]

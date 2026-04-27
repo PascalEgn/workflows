@@ -4,12 +4,11 @@ import xml.etree.ElementTree as ET
 
 import pytest
 from airflow.models import DagBag
-from aps.aps_api_client import APSApiClient
 from aps.aps_process_file import (
     add_data_availability,
     enhance_aps,
     enrich_aps,
-    replace_authors_with_xml_authors,
+    merge_authors_with_xml_authors,
 )
 from aps.parser import APSParser, APSXMLParser
 
@@ -43,26 +42,11 @@ def enhanced_article(parsed_article):
 
 
 @pytest.fixture
-def aps_api_client_fixture():
-    return APSApiClient()
-
-
-@pytest.fixture
-def populated_file(enhanced_article, aps_api_client_fixture):
-    if "dois" not in enhanced_article:
-        return enhanced_article
-
-    doi = "10.1103/yb33-p593"
-
-    pdf = aps_api_client_fixture.get_pdf_file(doi=doi)
-    xml = aps_api_client_fixture.get_xml_file(doi=doi)
-
-    downloaded_files = {
-        "pdf": pdf,
-        "xml": xml,
+def populated_file(enhanced_article, shared_datadir):
+    enhanced_article["files"] = {
+        "pdf": (shared_datadir / "test_pdf.pdf").read_bytes(),
+        "xml": (shared_datadir / "test_xml.xml").read_bytes(),
     }
-
-    enhanced_article["files"] = downloaded_files
     return enhanced_article
 
 
@@ -114,9 +98,7 @@ def encode_binary(data):
 
 
 def test_process_file(enriched_article, parsed_article_xml, shared_datadir):
-    complete_file = replace_authors_with_xml_authors(
-        enriched_article, parsed_article_xml
-    )
+    complete_file = merge_authors_with_xml_authors(enriched_article, parsed_article_xml)
     complete_file = add_data_availability(complete_file, parsed_article_xml)
 
     complete_file_serializable = encode_binary(complete_file)

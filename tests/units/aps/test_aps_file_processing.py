@@ -3,7 +3,7 @@ from io import BytesIO
 
 import pytest
 from airflow.models import DagBag
-from aps.aps_process_file import enhance_aps, enrich_aps
+from aps.aps_process_file import enhance_aps, enrich_aps, merge_authors_with_xml_authors
 from aps.parser import APSParser
 
 
@@ -59,6 +59,41 @@ class TestUnitApsProcessFileDag:
         result = function_to_unit_test({"files": {}})
 
         assert result == {}
+
+    def test_merge_authors_with_xml_authors_merges_orcid_by_full_name(self):
+        parsed_json = {
+            "authors": [
+                {
+                    "full_name": "Jane Doe",
+                    "affiliations": [{"value": "API affiliation Jane"}],
+                },
+                {
+                    "full_name": "John Smith",
+                    "affiliations": [{"value": "API affiliation John"}],
+                },
+            ]
+        }
+        parsed_xml = {
+            "authors": [
+                {"full_name": "John Smith", "orcid": "https://orcid.org/0000-0002"},
+                {"full_name": "Jane Doe", "orcid": "https://orcid.org/0000-0001"},
+            ]
+        }
+
+        merged = merge_authors_with_xml_authors(parsed_json, parsed_xml)
+
+        assert merged is not parsed_json
+        assert "orcid" not in parsed_json["authors"][0]
+        assert "orcid" not in parsed_json["authors"][1]
+
+        assert merged["authors"][0]["orcid"] == "https://orcid.org/0000-0001"
+        assert merged["authors"][1]["orcid"] == "https://orcid.org/0000-0002"
+        assert merged["authors"][0]["affiliations"] == [
+            {"value": "API affiliation Jane"}
+        ]
+        assert merged["authors"][1]["affiliations"] == [
+            {"value": "API affiliation John"}
+        ]
 
     def test_parse_xml_with_xml_file_reference_extracts_fields(self, monkeypatch):
         task = self.dag.get_task("parse_xml")

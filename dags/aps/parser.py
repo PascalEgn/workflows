@@ -238,8 +238,6 @@ class APSXMLParser(IParser):
                 if orcid is not None:
                     author["orcid"] = orcid.text.strip() if orcid.text else None
 
-                author["affiliations"] = self._get_affiliations(article, contrib)
-
                 authors.append(author)
 
         return authors

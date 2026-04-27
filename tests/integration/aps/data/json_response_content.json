@@ -1,143 +1,228 @@
 {
   "data": [
     {
-    "abstract": {
-      "value": "\u003Cp\u003EThe method of \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E cumulants has been shown as a powerful tool to study the fine details of the azimuthal anisotropies in high-energy nucleus-nucleus collisions. A new method for the fast calculation of arbitrary order \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-cumulant \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmi\u003En\u003C/mi\u003E\u003C/msub\u003E\u003Cmrow\u003E\u003Cmo\u003E{\u003C/mo\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003Cmi\u003Ek\u003C/mi\u003E\u003Cmo\u003E}\u003C/mo\u003E\u003C/mrow\u003E\u003C/mrow\u003E\u003C/math\u003E values, based on the partition of a non-negative integer \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003El\u003C/mi\u003E\u003Cmo\u003E≤\u003C/mo\u003E\u003Cmi\u003Em\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E for calculation of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003Cmi\u003Em\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-particle azimuthal correlations is presented in this paper. Unlike the standard \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E-cumulants method in which the calculation of high-order multiparticle calculations is impractical, the newly proposed method enables easy calculation. The validity of the method is proven via a toy model that uses the elliptic power distribution to simulate anisotropic emission of particles. The method enables the study of fine details of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003C/msub\u003E\u003C/math\u003E distribution, such as higher-order central moments of the \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmsub\u003E\u003Cmi\u003Ev\u003C/mi\u003E\u003Cmn\u003E2\u003C/mn\u003E\u003C/msub\u003E\u003C/math\u003E distribution, as well as the hydrodynamic behavior of the quark-gluon plasma.\u003C/p\u003E",
-      "format": "html"
-    },
-    "articleType": "article",
-    "authors": [
-      {
-        "type": "Person",
-        "name": "L. Nađđerđ",
-        "firstname": "L.",
-        "surname": "Nađđerđ",
-        "affiliationIds": [
-          "a1",
-          "a2"
-        ]
-      }
-    ],
-    "affiliations": [
-      {
-        "name": "\u003Ca href=\"https://ror.org/04wecwh56\"\u003EVinča Institute of Nuclear Sciences\u003C/a\u003E—National Institute of the Republic of Serbia, \u003Ca href=\"https://ror.org/02qsmb048\"\u003EUniversity of Belgrade\u003C/a\u003E, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia",
-        "id": "a1"
+      "abstract": {
+        "value": "<p>Quantum systems are typically characterized by the inherent fluctuation of their physical observables. Despite this fundamental importance, the investigation of the fluctuations in interacting quantum systems at finite temperature continues to pose considerable theoretical and experimental challenges. Here we report the characterization of atom number fluctuations in weakly interacting Bose-Einstein condensates. Technical fluctuations are mitigated through a combination of nondestructive detection and active stabilization of the cooling sequence. We observe fluctuations reduced by 27% below the canonical expectation for a noninteracting gas, revealing the microcanonical nature of our system. The peak fluctuations have near linear scaling with atom number <math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\"><mi mathvariant=\"normal\">Δ</mi><msubsup><mi>N</mi><mrow><mn>0</mn><mo>,</mo><mi>p</mi></mrow><mn>2</mn></msubsup><mo>∝</mo><msup><mi>N</mi><mn>1.134</mn></msup></math> in an experimentally accessible transition region outside the thermodynamic limit. Our experimental results thus set a benchmark for theoretical calculations under typical experimental conditions.</p>",
+        "format": "html"
       },
-      {
-        "name": "Strong Coupling Physics International Research Laboratory, \u003Ca href=\"https://ror.org/04mvpxy20\"\u003EHuzhou University\u003C/a\u003E, Huzhou, Zhejiang 313000, People's Republic of China",
-        "id": "a2"
-      },
-      {
-        "name": "Department of Physics and Astronomy, \u003Ca href=\"https://ror.org/02dqehb95\"\u003EPurdue University\u003C/a\u003E, Indiana 47907, USA",
-        "id": "a3"
-      },
-      {
-        "name": "College of Science, \u003Ca href=\"https://ror.org/04mvpxy20\"\u003EHuzhou University\u003C/a\u003E, Huzhou, Zhejiang 313000, People's Republic of China",
-        "id": "a4"
-      }
-    ],
-    "date": "2026-02-13",
-    "fundings": [
-      {
-        "funderId": "http://dx.doi.org/10.13039/501100001809",
-        "funderName": "National Natural Science Foundation of China",
-        "awards": [
-          "12035006",
-          "12075085",
-          "12147219"
-        ]
-      },
-      {
-        "funderId": "http://dx.doi.org/10.13039/100000015",
-        "funderName": "U.S. Department of Energy",
-        "awards": [
-          "de-sc0012910"
-        ]
-      },
-      {
-        "funderId": null,
-        "funderName": "Ministry of Science, Technological Development and Innovation of Republic of Serbia",
-        "awards": [
-          "0102502",
-          "JINR-Serbia_P23",
-          "JINR-Serbia_P39"
-        ]
-      }
-    ],
-    "type": "article",
-    "metadata_last_modified_at": "2026-02-13T15:30:32+0000",
-    "last_modified_at": "2026-02-13T15:30:32+0000",
-    "id": "10.1103/ycxy-lwqd",
-    "identifiers": {
-      "doi": "10.1103/ycxy-lwqd",
-      "arxiv": "arXiv:2506.00535"
-    },
-    "issue": {
-      "number": "2"
-    },
-    "pageStart": "024906",
-    "hasArticleId": true,
-    "numPages": 10,
-    "classificationSchemes": {
-      "physh": {
-        "concepts": [
-          {
-            "id": "7321e0f7-3b12-45a2-aa4a-28c2a7e03149",
-            "facet": {
-              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-            },
-            "primary": false
-          },
-          {
-            "id": "63ac8383-f353-4343-9c94-de98d9631340",
-            "facet": {
-              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-            },
-            "primary": true
-          },
-          {
-            "id": "ed47e543-18fb-4597-9384-a5fc4c7921f5",
-            "facet": {
-              "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
-            },
-            "primary": false
-          }
-        ],
-        "disciplines": [
-          "0213a5a0-0742-43f3-804b-3ccea08a13c0"
-        ]
-      }
-    },
-    "publisher": {
-      "name": "APS"
-    },
-    "rights": {
-      "rightsStatement": "Published by the American Physical Society",
-      "copyrightYear": 2026,
-      "copyrightHolders": [],
-      "creativeCommons": true,
-      "licenses": [
+      "articleType": "article",
+      "authors": [
         {
-          "url": "https://creativecommons.org/licenses/by/4.0/",
-          "licenseStatement": "Published by the American Physical Society under the terms of the \u003Ca href=\"https://creativecommons.org/licenses/by/4.0/\"\u003ECreative Commons Attribution 4.0 International\u003C/a\u003E license. Further distribution of this work must maintain attribution to the author(s) and the published article's title, journal citation, and DOI. Funded by SCOAP\u003Csup\u003E3\u003C/sup\u003E."
+          "type": "Person",
+          "name": "M. B. Christensen",
+          "firstname": "M. B.",
+          "surname": "Christensen",
+          "affiliationIds": [
+            "a1"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "T. Vibel",
+          "firstname": "T.",
+          "surname": "Vibel",
+          "affiliationIds": [
+            "a1"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "A. J. Hilliard",
+          "firstname": "A. J.",
+          "surname": "Hilliard",
+          "affiliationIds": [
+            "a1"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "M. B. Kruk",
+          "firstname": "M. B.",
+          "surname": "Kruk",
+          "affiliationIds": [
+            "a2",
+            "a3"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "K. Pawłowski",
+          "firstname": "K.",
+          "surname": "Pawłowski",
+          "affiliationIds": [
+            "a2"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "D. Hryniuk",
+          "firstname": "D.",
+          "surname": "Hryniuk",
+          "affiliationIds": [
+            "a2"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "K. Rzążewski",
+          "firstname": "K.",
+          "surname": "Rzążewski",
+          "affiliationIds": [
+            "a2"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "M. A. Kristensen",
+          "firstname": "M. A.",
+          "surname": "Kristensen",
+          "affiliationIds": [
+            "a1"
+          ]
+        },
+        {
+          "type": "Person",
+          "name": "J. J. Arlt",
+          "firstname": "J. J.",
+          "surname": "Arlt",
+          "affiliationIds": [
+            "a1"
+          ]
         }
-      ]
-    },
-    "journal": {
-      "id": "PRC",
-      "abbreviatedName": "Phys. Rev. C",
-      "name": "Physical Review C"
-    },
-    "title": {
-      "value": "Novel approach to a fast calculation of high-order \u003Cmath xmlns=\"http://www.w3.org/1998/Math/MathML\"\u003E\u003Cmrow\u003E\u003Cmi\u003EQ\u003C/mi\u003E\u003C/mrow\u003E\u003C/math\u003E cumulants",
-      "format": "html"
-    },
-    "tocSection": {
-      "label": "Relativistic Nuclear Collisions"
-    },
-    "volume": {
-      "number": "113"
+      ],
+      "affiliations": [
+        {
+          "name": "Center for Complex Quantum Systems, Department of Physics and Astronomy, Aarhus University, Ny Munkegade 120, DK-8000 Aarhus C, Denmark",
+          "id": "a1"
+        },
+        {
+          "name": "Center for Theoretical Physics, Polish Academy of Sciences, Al. Lotników 32/46, 02-668 Warsaw, Poland",
+          "id": "a2"
+        },
+        {
+          "name": "Institute of Physics, Polish Academy of Sciences, Al. Lotników 32/46, 02-668 Warsaw, Poland",
+          "id": "a3"
+        }
+      ],
+      "date": "2021-04-12",
+      "fundings": [
+        {
+          "funderId": "http://dx.doi.org/10.13039/100008398",
+          "funderName": "Villum Fonden",
+          "awards": []
+        },
+        {
+          "funderId": "http://dx.doi.org/10.13039/501100002808",
+          "funderName": "Carlsbergfondet",
+          "awards": []
+        },
+        {
+          "funderId": "http://dx.doi.org/10.13039/501100001732",
+          "funderName": "Danmarks Grundforskningsfond",
+          "awards": [
+            "DNRF156"
+          ]
+        },
+        {
+          "funderId": "http://dx.doi.org/10.13039/501100004281",
+          "funderName": "Narodowe Centrum Nauki",
+          "awards": [
+            "2018/29/B/ST2/01308",
+            "2019/34/E/ST2/00289",
+            "2018/31/B/ST2/01871"
+          ]
+        },
+        {
+          "funderId": "http://dx.doi.org/10.13039/501100014434",
+          "funderName": "Narodowa Agencja Wymiany Akademickiej",
+          "awards": [
+            "PPI/PZA/2019/1/00094/U/00001"
+          ]
+        }
+      ],
+      "type": "article",
+      "metadata_last_modified_at": "2021-04-12T14:07:52+0000",
+      "last_modified_at": "2021-04-12T14:07:52+0000",
+      "id": "10.1103/PhysRevLett.126.153601",
+      "identifiers": {
+        "doi": "10.1103/PhysRevLett.126.153601",
+        "arxiv": "arXiv:2011.08736"
+      },
+      "issue": {
+        "number": "15"
+      },
+      "pageStart": "153601",
+      "hasArticleId": true,
+      "numPages": 6,
+      "classificationSchemes": {
+        "physh": {
+          "concepts": [
+            {
+              "id": "46e2a993-8dce-4c28-beab-fdabe4378664",
+              "facet": {
+                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+              },
+              "primary": false
+            },
+            {
+              "id": "4254adf6-872d-4868-9931-a2a3e84b566e",
+              "facet": {
+                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+              },
+              "primary": true
+            },
+            {
+              "id": "c6d9db47-7b2d-4d3b-868a-606b65695e3c",
+              "facet": {
+                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+              },
+              "primary": false
+            },
+            {
+              "id": "1addd209-da18-41de-9a48-46f5f0f11651",
+              "facet": {
+                "id": "bdb1ef91-b776-4e36-8f8f-3e93666bac1e"
+              },
+              "primary": false
+            }
+          ],
+          "disciplines": [
+            "8ab3d2b7-b50b-460e-b086-8990cfcbd350",
+            "510fc218-8774-4547-ab09-fc6cef0c9a03",
+            "419d860e-ce5c-42f1-b6ad-4dee9f4fbf60"
+          ]
+        }
+      },
+      "publisher": {
+        "name": "APS"
+      },
+      "rights": {
+        "rightsStatement": "Published by the American Physical Society",
+        "copyrightYear": 2021,
+        "copyrightHolders": [],
+        "creativeCommons": true,
+        "licenses": [
+          {
+            "url": "https://creativecommons.org/licenses/by/4.0/",
+            "licenseStatement": "Published by the American Physical Society under the terms of the <a href=\"https://creativecommons.org/licenses/by/4.0/\">Creative Commons Attribution 4.0 International</a> license. Further distribution of this work must maintain attribution to the author(s) and the published article’s title, journal citation, and DOI."
+          }
+        ]
+      },
+      "journal": {
+        "id": "PRL",
+        "abbreviatedName": "Phys. Rev. Lett.",
+        "name": "Physical Review Letters"
+      },
+      "title": {
+        "value": "Observation of Microcanonical Atom Number Fluctuations in a Bose-Einstein Condensate",
+        "format": "html"
+      },
+      "tocSection": {
+        "label": "Atomic, Molecular, and Optical Physics"
+      },
+      "volume": {
+        "number": "126"
+      }
     }
-  }
   ]
 }
