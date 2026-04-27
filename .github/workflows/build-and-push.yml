@@ -34,10 +34,10 @@ jobs:
     outputs:
       image-id: ${{ steps.build.outputs.image-id }}
     steps:
-      - uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.ref }}
-      - uses: cern-sis/gh-workflows/.github/actions/docker-build@v6.5
+      - uses: cern-sis/gh-workflows/.github/actions/docker-build@v7.0.0
         id: build
         with:
           image: ${{ inputs.image }}
