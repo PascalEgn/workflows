@@ -169,48 +169,6 @@ class APSXMLParser(IParser):
         ]
         super().__init__(extractors)
 
-    def _get_affiliations(self, article, contrib):
-        affiliations = []
-
-        xref_elements = contrib.findall(".//xref[@ref-type='aff']")
-
-        if not xref_elements:
-            logger.info("No affiliations found for this author.")
-            return affiliations
-
-        for xref in xref_elements:
-            ref_ids = list(xref.get("rid").split(" "))
-            for ref_id in ref_ids:
-                affiliation_node = article.find(f".//aff[@id='{ref_id}']")
-
-                if affiliation_node is not None:
-                    full_text_parts = []
-                    ror = None
-
-                    for child in affiliation_node.iter():
-                        if (
-                            child.tag == "institution-id"
-                            and child.get("institution-id-type") == "ror"
-                        ):
-                            ror = child.text
-                        elif (
-                            child.tag not in ["label", "sup", "institution-id"]
-                            and child.text
-                        ):
-                            full_text_parts.append(child.text.strip())
-                        if child.tail:
-                            full_text_parts.append(child.tail.strip())
-
-                    raw_aff_text = " ".join(filter(None, full_text_parts))
-                    aff_text = re.sub(r"\s*,\s*,*", ", ", raw_aff_text)
-                    aff_text = re.sub(r"\s+", " ", aff_text).strip()
-
-                    affiliations.append({"value": aff_text, "ror": ror})
-                else:
-                    logger.info(f"Affiliation with id '{ref_id}' not found.")
-
-        return affiliations
-
     def _get_authors(self, article):
         authors = []
 
@@ -237,8 +195,6 @@ class APSXMLParser(IParser):
                 orcid = contrib.find("./contrib-id[@contrib-id-type='orcid']")
                 if orcid is not None:
                     author["orcid"] = orcid.text.strip() if orcid.text else None
-
-                author["affiliations"] = self._get_affiliations(article, contrib)
 
                 authors.append(author)
 

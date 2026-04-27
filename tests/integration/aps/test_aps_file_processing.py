@@ -9,7 +9,7 @@ from aps.aps_process_file import (
     add_data_availability,
     enhance_aps,
     enrich_aps,
-    replace_authors_with_xml_authors,
+    merge_authors_with_xml_authors,
 )
 from aps.parser import APSParser, APSXMLParser
 
@@ -114,9 +114,7 @@ def encode_binary(data):
 
 
 def test_process_file(enriched_article, parsed_article_xml, shared_datadir):
-    complete_file = replace_authors_with_xml_authors(
-        enriched_article, parsed_article_xml
-    )
+    complete_file = merge_authors_with_xml_authors(enriched_article, parsed_article_xml)
     complete_file = add_data_availability(complete_file, parsed_article_xml)
 
     complete_file_serializable = encode_binary(complete_file)
@@ -135,3 +133,35 @@ def test_process_file(enriched_article, parsed_article_xml, shared_datadir):
     actual_cleaned = remove_fields(json.loads(serialized_output))
     expected_cleaned = remove_fields(expected_output)
     assert actual_cleaned == expected_cleaned
+
+
+def test_merge_authors_with_xml_authors_merges_orcid_by_full_name():
+    parsed_json = {
+        "authors": [
+            {
+                "full_name": "Jane Doe",
+                "affiliations": [{"value": "API affiliation Jane"}],
+            },
+            {
+                "full_name": "John Smith",
+                "affiliations": [{"value": "API affiliation John"}],
+            },
+        ]
+    }
+    parsed_xml = {
+        "authors": [
+            {"full_name": "John Smith", "orcid": "https://orcid.org/0000-0002"},
+            {"full_name": "Jane Doe", "orcid": "https://orcid.org/0000-0001"},
+        ]
+    }
+
+    merged = merge_authors_with_xml_authors(parsed_json, parsed_xml)
+
+    assert merged is not parsed_json
+    assert "orcid" not in parsed_json["authors"][0]
+    assert "orcid" not in parsed_json["authors"][1]
+
+    assert merged["authors"][0]["orcid"] == "https://orcid.org/0000-0001"
+    assert merged["authors"][1]["orcid"] == "https://orcid.org/0000-0002"
+    assert merged["authors"][0]["affiliations"] == [{"value": "API affiliation Jane"}]
+    assert merged["authors"][1]["affiliations"] == [{"value": "API affiliation John"}]

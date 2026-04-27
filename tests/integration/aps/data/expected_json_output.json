@@ -22,14 +22,21 @@
         {
             "affiliations": [
                 {
-                    "ror": "https://ror.org/00ad27c73",
-                    "value": ", 141980 Dubna, Russia and Joint Institute for Nuclear Research, 0036 Yerevan, Armenia A.I.Alikhanyan National Science Laboratory (YerPhI) Foundation"
+                    "country": "Serbia",
+                    "organization": "Vinča Institute of Nuclear Sciences—National Institute of the Republic of Serbia, University of Belgrade, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia",
+                    "ror": "https://ror.org/02qsmb048",
+                    "value": "<a href=\"https://ror.org/04wecwh56\">Vinča Institute of Nuclear Sciences</a>—National Institute of the Republic of Serbia, <a href=\"https://ror.org/02qsmb048\">University of Belgrade</a>, Mike Petrovića Alasa 12–14, Vinča 11351, Belgrade, Serbia"
+                },
+                {
+                    "country": "China",
+                    "organization": "Strong Coupling Physics International Research Laboratory, Huzhou University, Huzhou, Zhejiang 313000, People's Republic of China",
+                    "ror": "https://ror.org/04mvpxy20",
+                    "value": "Strong Coupling Physics International Research Laboratory, <a href=\"https://ror.org/04mvpxy20\">Huzhou University</a>, Huzhou, Zhejiang 313000, People's Republic of China"
                 }
             ],
-            "full_name": "Smbat Grigoryan",
-            "given_names": "Smbat",
-            "orcid": "https://orcid.org/0000-0002-0658-5949",
-            "surname": "Grigoryan"
+            "full_name": "L. Nađđerđ",
+            "given_names": "L.",
+            "surname": "Nađđerđ"
         }
     ],
     "collections": [
