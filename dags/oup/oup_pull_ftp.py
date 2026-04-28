@@ -4,6 +4,7 @@ import common.pull_ftp as pull_ftp
 import pendulum
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import dag, task
+from common.notification_service import FailedDagNotifier
 from oup.ftp_service import OUPSFTPService
 from oup.repository import OUPRepository
 
@@ -14,6 +15,7 @@ OUP_SFTP = OUPSFTPService()
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule="45 */6 * * *",
     tags=["pull", "oup"],

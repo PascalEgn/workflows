@@ -7,6 +7,7 @@ from airflow.sdk import dag, task
 from common.enhancer import Enhancer
 from common.enricher import Enricher
 from common.exceptions import EmptyOutputFromPreviousTask
+from common.notification_service import FailedDagNotifier
 from common.scoap3_s3 import Scoap3Repository
 from common.utils import (
     create_or_update_article,
@@ -50,6 +51,7 @@ def oup_validate_record(enriched_file):
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     schedule=None,
     tags=["process", "oup"],
     start_date=pendulum.today("UTC").add(days=-1),

@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 import pendulum
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import Param, dag, task
+from common.notification_service import FailedDagNotifier
 from common.utils import parse_without_names_spaces
 from iop.repository import IOPRepository
 
@@ -122,6 +123,7 @@ def _enforce_limit(records, limit):
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule=None,
     catchup=False,

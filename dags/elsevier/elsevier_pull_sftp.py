@@ -3,6 +3,7 @@ import logging
 import pendulum
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import dag, task
+from common.notification_service import FailedDagNotifier
 from common.pull_ftp import migrate_from_ftp as migrate_from_ftp_common
 from common.pull_ftp import reprocess_files
 from elsevier.repository import ElsevierRepository
@@ -16,6 +17,7 @@ ELSEVIER_SFTP = ElsevierSFTPService()
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule="5 */6 * * *",
     tags=["pull", "elsevier"],

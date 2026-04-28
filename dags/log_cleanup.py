@@ -5,11 +5,13 @@ import shutil
 
 from airflow.sdk import dag, task
 from airflow.sdk.definitions.param import Param
+from common.notification_service import FailedDagNotifier
 
 logger = logging.getLogger("airflow.task")
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     schedule="0 */12 * * *",
     catchup=False,
     tags=["service", "log_cleanup"],

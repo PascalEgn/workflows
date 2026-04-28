@@ -9,6 +9,7 @@ from airflow.providers.amazon.aws.transfers.http_to_s3 import HttpToS3Operator
 from airflow.sdk import dag, task
 from common.enhancer import Enhancer
 from common.enricher import Enricher
+from common.notification_service import FailedDagNotifier
 from common.utils import create_or_update_article
 from jagiellonian.parser import JagiellonianParser
 
@@ -28,6 +29,7 @@ def update_filename_extension(filename, type):
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     schedule=None,
     start_date=pendulum.today("UTC").add(days=-1),
     tags=["process", "jagiellonian"],
