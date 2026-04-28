@@ -16,7 +16,7 @@ def dag():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 2
+    assert len(dag.tasks) == 1
 
 
 @freeze_time("2023-09-20")

@@ -105,7 +105,7 @@ def springer_data_files_in_s3():
 
 def test_dag_loaded(dag):
     assert dag is not None
-    assert len(dag.tasks) == 8
+    assert len(dag.tasks) == 7
 
 
 publisher = "Springer"

@@ -45,7 +45,7 @@
 ---
 x-airflow-common: &airflow-common
   build:
-    target: ${BUILD_TARGET:-base}
+    target: ${BUILD_TARGET:-dev}
     dockerfile: base-images/airflow/Dockerfile
   pull_policy: never
   environment: &airflow-common-env

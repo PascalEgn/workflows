@@ -1,4 +1,4 @@
-FROM registry.cern.ch/docker.io/apache/airflow:slim-3.1.8-python3.12 AS base
+FROM registry.cern.ch/docker.io/apache/airflow:slim-3.1.8-python3.12 AS dev
 USER root
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -24,9 +24,6 @@ RUN pip install --no-cache-dir -r requirements-airflow.txt
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir -r requirements-test.txt
 RUN rm requirements.txt requirements-test.txt requirements-airflow.txt constraints.txt
-
-FROM base AS dev
-COPY base-images/airflow/plugins/ /opt/airflow/plugins/
 
 FROM dev AS prod
 COPY dags/ /opt/airflow/dags/
