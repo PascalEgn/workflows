@@ -167,7 +167,7 @@ class OUPParser(IParser):
         match = re.search(ROR_PATTERN, text, re.IGNORECASE)
 
         if match:
-            return match.group(1)
+            return match.group(0)
         return None
 
     def _clean_affiliation_text(self, text):
