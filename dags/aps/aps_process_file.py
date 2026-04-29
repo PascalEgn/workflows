@@ -1,6 +1,7 @@
 import json
 import logging
 import xml.etree.ElementTree as ET
+from copy import deepcopy
 
 import pendulum
 from airflow.sdk import Param, dag, get_current_context, task
@@ -30,15 +31,37 @@ def enrich_aps(enhanced_file):
     return Enricher()(enhanced_file)
 
 
-def replace_authors_with_xml_authors(
+def merge_authors_with_xml_authors(
     parsed_json, parsed_xml, fail_if_author_count_not_equal=True
 ):
     if fail_if_author_count_not_equal and len(parsed_json["authors"]) != len(
         parsed_xml["authors"]
     ):
         raise ValueError("Number of authors in JSON and XML do not match")
-    parsed_json["authors"] = parsed_xml["authors"]
-    return parsed_json
+
+    xml_authors_by_full_name = {}
+    for xml_author in parsed_xml.get("authors", []):
+        full_name = xml_author.get("full_name")
+        if full_name and full_name not in xml_authors_by_full_name:
+            xml_authors_by_full_name[full_name] = xml_author
+
+    merged_json = deepcopy(parsed_json)
+
+    for json_author in merged_json.get("authors", []):
+        full_name = json_author.get("full_name")
+        matched_xml_author = xml_authors_by_full_name.get(full_name)
+        if not matched_xml_author:
+            logger.error(
+                "Could not match API author full_name '%s' to XML author list during ORCID merge.",
+                full_name,
+            )
+            continue
+
+        xml_orcid = matched_xml_author.get("orcid")
+        if xml_orcid:
+            json_author["orcid"] = xml_orcid
+
+    return merged_json
 
 
 def add_data_availability(parsed_json, parsed_xml):
@@ -109,13 +132,13 @@ def aps_process_file():
         parsed = parser.parse(ET.fromstring(xml_content))
         return parsed
 
-    @task(task_id="replace_authors_with_xml_authors")
-    def task_replace_authors_with_xml_authors(parsed_json, parsed_xml):
+    @task(task_id="merge_authors_with_xml_authors")
+    def task_merge_authors_with_xml_authors(parsed_json, parsed_xml):
         if not parsed_xml:
-            logger.warning("No parsed XML data available for author replacement.")
+            logger.warning("No parsed XML data available for author ORCID merge.")
             return parsed_json
         ctx = get_current_context()
-        return replace_authors_with_xml_authors(
+        return merge_authors_with_xml_authors(
             parsed_json,
             parsed_xml,
             fail_if_author_count_not_equal=ctx["params"][
@@ -143,10 +166,8 @@ def aps_process_file():
     enhanced_file_with_files = populate_files(enhanced_file)
     enriched_file = enrich(enhanced_file_with_files)
     parsed_xml = parse_xml(enriched_file)
-    replaced_authors_file = task_replace_authors_with_xml_authors(
-        enriched_file, parsed_xml
-    )
-    complete_file = task_add_data_availability(replaced_authors_file, parsed_xml)
+    merged_authors_file = task_merge_authors_with_xml_authors(enriched_file, parsed_xml)
+    complete_file = task_add_data_availability(merged_authors_file, parsed_xml)
     save_to_s3(complete_file)
     create_or_update(complete_file)
 
