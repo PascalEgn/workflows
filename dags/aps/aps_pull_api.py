@@ -9,6 +9,7 @@ from aps.aps_api_client import APSApiClient
 from aps.aps_params import APSParams
 from aps.repository import APSRepository
 from aps.utils import save_file_in_s3, split_json
+from common.notification_service import FailedDagNotifier
 from common.utils import set_harvesting_interval
 
 APS_REPO = APSRepository()
@@ -16,6 +17,7 @@ logger = logging.getLogger("airflow.task")
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule="0 */6 * * *",
     tags=["pull", "aps"],

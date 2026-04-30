@@ -4,6 +4,7 @@ import os
 import pendulum
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import dag, task
+from common.notification_service import FailedDagNotifier
 from common.utils import set_harvesting_interval
 from hindawi.hindawi_api_client import HindawiApiClient
 from hindawi.hindawi_params import HindawiParams
@@ -15,6 +16,7 @@ logger = logging.getLogger("airflow.task")
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule="15 */6 * * *",
     tags=["pull", "hindawi"],

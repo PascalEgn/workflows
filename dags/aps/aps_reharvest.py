@@ -7,6 +7,7 @@ import pendulum
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import Param, dag, task
 from aps.repository import APSRepository
+from common.notification_service import FailedDagNotifier
 
 logger = logging.getLogger("airflow.task")
 APS_REPO = APSRepository()
@@ -100,6 +101,7 @@ def _resolve_file_keys(file_keys, all_snapshot_keys):
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     start_date=pendulum.today("UTC").add(days=-1),
     schedule=None,
     catchup=False,

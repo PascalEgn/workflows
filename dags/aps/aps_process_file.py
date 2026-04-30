@@ -10,6 +10,7 @@ from aps.repository import APSRepository
 from common.enhancer import Enhancer
 from common.enricher import Enricher
 from common.exceptions import EmptyOutputFromPreviousTask
+from common.notification_service import FailedDagNotifier
 from common.scoap3_s3 import Scoap3Repository
 from common.utils import create_or_update_article, upload_json_to_s3
 from inspire_utils.record import get_value
@@ -70,6 +71,7 @@ def add_data_availability(parsed_json, parsed_xml):
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     schedule=None,
     start_date=pendulum.today("UTC").add(days=-1),
     tags=["process", "aps"],

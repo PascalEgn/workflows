@@ -7,6 +7,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.http.hooks.http import HttpHook
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sdk import dag, task
+from common.notification_service import FailedDagNotifier
 
 logger = logging.getLogger("airflow.task")
 
@@ -42,6 +43,7 @@ default_args = {
 
 
 @dag(
+    on_failure_callback=FailedDagNotifier(),
     default_args=default_args,
     description="Transfer Crossref journal data to S3",
     schedule="35 */6 * * *",
